@@ -21,10 +21,6 @@ Private Sub mCancel_Click()
     mainMenu.mCancel_Click
 End Sub
 
-Private Sub TextBox1_Change()
-
-End Sub
-
 Private Sub UserForm_Initialize()
     With Me
         .StartUpPosition = 0

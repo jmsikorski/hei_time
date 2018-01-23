@@ -137,10 +137,6 @@ Private Sub spDone_Click()
     mMenu.Show
 End Sub
 
-Private Sub UserForm_Initialize()
-
-End Sub
-
 Public Sub setSheet(menuNum As Integer)
     Dim ws As Worksheet
     Dim tmp As Range

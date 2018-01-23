@@ -8,6 +8,7 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = True
 Private Sub Workbook_BeforeClose(Cancel As Boolean)
+    Call ExportVBA
     For i = 1 To ThisWorkbook.Sheets.count
     ThisWorkbook.Unprotect "Dea504!!"
         If Worksheets(i).name <> "HOME" Then

@@ -71,7 +71,7 @@ Private Sub copy_tables(ByRef wb As Workbook)
     Application.CutCopyMode = False
 End Sub
 
-Private Sub open_data_file(name As String)
+Public Sub open_data_file(name As String)
     On Error GoTo share_err
     Dim xPath As String
     Dim xFile As String
@@ -230,7 +230,6 @@ Public Sub openBook()
     auth = False
     Dim uNum As Integer
     uNum = 2
-    
     get_user_list
     auth = file_auth
     If auth = False Then
@@ -245,7 +244,7 @@ Public Sub openBook()
                 End If
         End If
     Next i
-
+    update_emp_table.update_emp_table
     week = calcWeek(Date)
     jobPath = vbNullString
     job = vbNullString
@@ -281,9 +280,9 @@ Private Function file_auth() As Boolean
     Dim auth As Boolean
     aut = False
     user = Environ$("Username")
-'    If user = "jsikorski" Then
-'        file_auth = True
-'    End If
+    If user = "jsikorski" Then
+        file_auth = True
+    End If
     
     logMenu.TextBox2.Value = user
     logMenu.Show
