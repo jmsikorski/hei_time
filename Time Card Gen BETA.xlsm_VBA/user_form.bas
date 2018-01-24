@@ -1,15 +1,4 @@
 Attribute VB_Name = "user_form"
-Private Function get_auth(pw As String) As Boolean
-    Dim pw_check As String
-    pw_check = encryption.encryptPassword(pw)
-    If pw_check = "!%qtpee" Then
-        get_auth = True
-    Else
-        get_auth = False
-    End If
-End Function
-
-
 Public Sub get_user_list()
     Dim auth As String
     Dim user As String
@@ -20,10 +9,6 @@ Public Sub get_user_list()
     Dim qt As QueryTable
     Dim ws As Worksheet
     Set ws = ThisWorkbook.Worksheets("USER")
-    With ws.UsedRange
-        .Offset(1, 0).Clear
-        .Offset(1, 0).Value = "X"
-    End With
     
     URL = "https://github.com/jmsikorski/hei_misc/blob/master/Modules/Time_Card_User.csv"
     Set qt = ws.QueryTables.Add( _
@@ -31,18 +16,14 @@ Public Sub get_user_list()
         Destination:=ws.Range("A1"))
      
     With qt
-        .RefreshOnFileOpen = True
+        .RefreshOnFileOpen = False
         .name = "Users"
         .FieldNames = True
         .WebSelectionType = xlAllTables
-        .Refresh BackgroundQuery:=False
+        .Refresh
     End With
     ws.Range("A1").EntireColumn.Delete
-    ws.Range("D1:F1").EntireColumn.Delete
-    If get_auth(encryptPassword(ws.Range("B2"))) Then
-    Else
-        ThisWorkbook.Close False
-    End If
+    ws.Range("D1:F1").EntireColumn.Clear
     Application.DisplayAlerts = True
     Application.ScreenUpdating = True
     Exit Sub
@@ -52,7 +33,7 @@ err_tag:
         .Offset(1, 0).Clear
         .Value = "X"
     End With
-    Stop
+    ThisWorkbook.Close False
  End Sub
 
 Public Sub extract_users()

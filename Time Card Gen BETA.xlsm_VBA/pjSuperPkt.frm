@@ -1,7 +1,7 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} pjSuperPkt 
    Caption         =   "Add Leads"
-   ClientHeight    =   11244
+   ClientHeight    =   11250
    ClientLeft      =   120
    ClientTop       =   465
    ClientWidth     =   10365
@@ -70,7 +70,10 @@ Private Sub spDone_Click()
             End If
         Next x
     Next i
-    
+    If lIndex = 0 Then
+        MsgBox "You must Select a Lead!", vbExclamation + vbOKOnly
+        Exit Sub
+    End If
     If isSave < 0 Then
         ReDim weekRoster(lIndex - 1, eCount)
     Else

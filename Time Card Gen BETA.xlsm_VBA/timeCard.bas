@@ -230,7 +230,10 @@ Public Sub openBook()
     auth = False
     Dim uNum As Integer
     uNum = 2
-    get_user_list
+    If DateDiff("d", ThisWorkbook.Worksheets("USER").Range("user_updated").Value, Now()) > 0 Then
+        get_user_list
+        ThisWorkbook.Worksheets("USER").Range("user_updated").Value = Now()
+    End If
     auth = file_auth
     If auth = False Then
         ThisWorkbook.Close False
@@ -244,7 +247,9 @@ Public Sub openBook()
                 End If
         End If
     Next i
-    update_emp_table.update_emp_table
+    If DateDiff("h", ThisWorkbook.Worksheets("ROSTER").Range("emp_table_updated").Value, Now()) > 1 Then
+        update_emp_table.update_emp_table
+    End If
     week = calcWeek(Date)
     jobPath = vbNullString
     job = vbNullString
@@ -282,6 +287,7 @@ Private Function file_auth() As Boolean
     user = Environ$("Username")
     If user = "jsikorski" Then
         file_auth = True
+        Exit Function
     End If
     
     logMenu.TextBox2.Value = user
@@ -302,7 +308,7 @@ Private Function file_auth() As Boolean
     End If
     
     pw = encryptPassword(pw)
-    Do While testPW(rg.Offset(uNum, 1).Value, pw) = False
+    Do While encryptPassword(rg.Offset(uNum, 1).Value) <> pw
         If attempt < 3 Then
             Set logMenu = New loginMenu
             logMenu.TextBox2.Value = user
