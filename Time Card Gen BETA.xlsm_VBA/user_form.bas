@@ -1,18 +1,18 @@
 Attribute VB_Name = "user_form"
-Public Sub get_user_list()
+Public Sub get_user_list1()
     Dim auth As String
     Dim user As String
     On Error GoTo err_tag
     Application.DisplayAlerts = False
     Application.ScreenUpdating = False
-    Dim URL As String
+    Dim url As String
     Dim qt As QueryTable
     Dim ws As Worksheet
     Set ws = ThisWorkbook.Worksheets("USER")
     
-    URL = "https://github.com/jmsikorski/hei_misc/blob/master/Modules/Time_Card_User.csv"
+    url = "https://github.com/jmsikorski/hei_misc/blob/master/Modules/Time_Card_User.csv"
     Set qt = ws.QueryTables.Add( _
-        Connection:="URL;" & URL, _
+        Connection:="URL;" & url, _
         Destination:=ws.Range("A1"))
      
     With qt
@@ -35,9 +35,26 @@ err_tag:
     End With
     ThisWorkbook.Close False
  End Sub
+ 
+Public Sub get_user_list()
+    Application.ScreenUpdating = False
+    Dim wb As Workbook
+    Set wb = ThisWorkbook
+    Dim xPath As String
+    Dim ws As Worksheet
+    Dim rng As Range
+    timeCard.open_data_file "User.xlsx", "hei3078USER"
+    Set ws = Workbooks("User.xlsx").Worksheets("USER")
+    Set rng = ws.UsedRange
+    With wb.Worksheets("USER")
+        .UsedRange.Clear
+        .Range("A1", .Range("A1").Offset(rng.Rows.count - 1, rng.Columns.count - 1)) = rng.Value
+        .Range("user_updated") = Now()
+    End With
+    ws.Parent.Close False
+End Sub
 
 Public Sub extract_users()
-Attribute extract_users.VB_ProcData.VB_Invoke_Func = "E\n14"
     If Environ$("Username") = "jsikorski" Then
         Application.DisplayAlerts = False
         Application.ScreenUpdating = False
@@ -56,4 +73,28 @@ Attribute extract_users.VB_ProcData.VB_Invoke_Func = "E\n14"
         Application.DisplayAlerts = True
         Application.ScreenUpdating = True
     End If
+End Sub
+
+
+Public Sub export_user_sheet()
+    Application.ScreenUpdating = True
+    Application.DisplayAlerts = False
+    Dim wb As Workbook
+    Set wb = ThisWorkbook
+    Dim xPath As String
+    Dim ws As Worksheet
+    Dim rng As Range
+    Dim xFile As String
+    timeCard.open_data_file "User.xlsx", "hei3078USER"
+    Set ws = Workbooks("User.xlsx").Worksheets("USER")
+    Set rng = wb.Worksheets("USER").UsedRange
+    With ws
+        .UsedRange.Clear
+        .Range("A1", .Range("A1").Offset(rng.Rows.count - 1, rng.Columns.count - 1)) = rng.Value
+        .Range("user_updated") = Now()
+    End With
+    xFile = ws.Parent.path & "\" & ws.Parent.name
+    ws.Parent.SaveAs xFile
+    SetAttr xFile, vbReadOnly + vbHidden
+    ws.Parent.Close
 End Sub

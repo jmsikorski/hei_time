@@ -27,7 +27,7 @@ Public Sub send_req()
         
         xYesorNo = MsgBox("Preview E-mail?", vbYesNoCancel + vbQuestion, "Send?")
         If xYesorNo = vbYes Then
-            .Display
+            .display
         ElseIf xYesorNo = vbCancel Then
             MsgBox "PDF created, but not submitted", vbInformation
         Else

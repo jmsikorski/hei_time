@@ -71,20 +71,28 @@ Private Sub copy_tables(ByRef wb As Workbook)
     Application.CutCopyMode = False
 End Sub
 
-Public Sub open_data_file(name As String)
+Public Sub open_data_file(name As String, Optional pw As String)
     On Error GoTo share_err
     Dim xPath As String
-    Dim xfile As String
+    Dim xFile As String
     Dim wb As Workbook
     xPath = ThisWorkbook.path & "\" & "Data.lnk"
     xPath = Getlnkpath(xPath)
-    xfile = xPath & "\" & name
-    Workbooks.Open xfile
+    xFile = xPath & "\" & name
+    If pw = vbNullString Then
+        Workbooks.Open xFile
+    Else
+        Workbooks.Open xFile, Password:=pw
+    End If
     Exit Sub
 share_err:
     xPath = ThisWorkbook.path & "\" & "Data Files"
-    xfile = xPath & "\" & name
-    Workbooks.Open xfile
+    xFile = xPath & "\" & name
+    If pw = vbNullString Then
+        Workbooks.Open xFile
+    Else
+        Workbooks.Open xFile, Password:=pw
+    End If
 End Sub
 
 Public Function Getlnkpath(ByVal Lnk As String) As String
@@ -230,13 +238,29 @@ Public Sub openBook()
     auth = False
     Dim uNum As Integer
     uNum = 2
-    If DateDiff("d", ThisWorkbook.Worksheets("USER").Range("user_updated").Value, Now()) > 0 Then
+    Debug.Print DateDiff("m", ThisWorkbook.Worksheets("USER").Range("user_updated").Value, Now())
+    If DateDiff("n", ThisWorkbook.Worksheets("USER").Range("user_updated").Value, Now()) > 5 Then
         get_user_list
         ThisWorkbook.Worksheets("USER").Range("user_updated").Value = Now()
     End If
+auth_retry:
     auth = file_auth
     If auth = False Then
-        ThisWorkbook.Close False
+        Dim ans As Integer
+        ans = MsgBox("This program is not licensed!", vbCritical + vbAbortRetryIgnore)
+        If ans = vbIgnore Then
+            ThisWorkbook.Close False
+        ElseIf ans = vbRetry Then
+            GoTo auth_retry
+        ElseIf ans = vbAbort Then
+            If Environ$("username") = "jsikorski" Then
+                Exit Sub
+            Else
+                ThisWorkbook.Close False
+            End If
+        Else
+            ThisWorkbook.Close , False
+        End If
     End If
     
     
@@ -276,6 +300,60 @@ Attribute hideBooks.VB_ProcData.VB_Invoke_Func = "H\n14"
         End If
     Next i
 End Sub
+
+Private Function get_lic(url As String) As Boolean
+    
+    get_lic = False
+    Dim winhttp As New WinHttpRequest
+    winhttp.Open "get", url, False
+    winhttp.Send
+    If winhttp.responseText = "True" Then get_lic = True
+End Function
+
+Public Function publicEncryptPassword(pw As String) As String
+    If InputBox("Authorization code:", "RESTRICED") <> 12292018 Then
+        publicEncryptPassword = "ERROR"
+        Exit Function
+    End If
+    Dim pwi() As Long
+    Dim test() As String
+    Dim epw As String
+    epw = vbnullStrig
+    ReDim test(Len(pw))
+    ReDim pwi(Len(pw))
+    Dim x As Integer
+    x = 1
+    For i = 0 To Len(pw) - 1
+        test(i) = Left(pw, 1)
+        pwi(i) = Asc(test(i))
+        pw = Right(pw, Len(pw) - 1)
+        pwi(i) = pwi(i) Xor ThisWorkbook.Worksheets("KEY").Range("A" & x).Value
+        If pwi(i) = 0 Then pwi(i) = 1
+        epw = epw & Chr(pwi(i))
+    Next i
+    publicEncryptPassword = epw
+End Function
+
+Private Function encryptPassword(pw As String) As String
+    Dim pwi() As Long
+    Dim test() As String
+    Dim epw As String
+    epw = vbnullStrig
+    ReDim test(Len(pw))
+    ReDim pwi(Len(pw))
+    Dim x As Integer
+    x = 1
+    For i = 0 To Len(pw) - 1
+        test(i) = Left(pw, 1)
+        pwi(i) = Asc(test(i))
+        pw = Right(pw, Len(pw) - 1)
+        pwi(i) = pwi(i) Xor ThisWorkbook.Worksheets("KEY").Range("A" & x).Value
+        If pwi(i) = 0 Then pwi(i) = 1
+        epw = epw & Chr(pwi(i))
+    Next i
+    encryptPassword = epw
+End Function
+
 Private Function file_auth() As Boolean
     Dim rg As Range
     Set rg = Worksheets("USER").Range("A" & 2)
@@ -284,56 +362,60 @@ Private Function file_auth() As Boolean
     Dim pw As String
     Dim auth As Boolean
     aut = False
-    user = Environ$("Username")
-'    If user = "jsikorski" Then
-'        file_auth = True
-'        Exit Function
-'    End If
-    
-    logMenu.TextBox2.Value = user
-    logMenu.Show
-    pw = logMenu.TextBox1.Value
-    user = logMenu.TextBox2.Value
-    Unload logMenu
-    Do While rg.Offset(i, 0) <> vbNullString
-        If user = rg.Offset(i, 0) Then
-            auth = True
-            uNum = i
-        End If
-        i = i + 1
-    Loop
-    If auth = False Then
-        MsgBox ("YOU ARE NOT AUTHORIZED TO VIEW THIS FILE!")
-        ThisWorkbook.Close
-    End If
-    
-    pw = encryptPassword(pw)
-    Do While encryptPassword(rg.Offset(uNum, 1).Value) <> pw
-        If attempt < 3 Then
-            Set logMenu = New loginMenu
-            logMenu.TextBox2.Value = user
-            logMenu.Show
-            pw = logMenu.TextBox1.Value
-            user = logMenu.TextBox2.Value
-            Unload logMenu
-            Do While rg.Offset(i, 0) <> vbNullString
-                If user = rg.Offset(i, 0) Then
-                    auth = True
-                    uNum = i
-                End If
-                i = i + 1
-            Loop
-            attempt = attempt + 1
-        Else
-            MsgBox "You have made 3 failed attempts!", 16, "FAILED UNLOCK"
-            If user <> "jsikorski" Then
-                file_auth = False
-            Else
-                Exit Do
+    If get_lic("https://raw.githubusercontent.com/jmsikorski/hei_misc/master/Licence.txt") Then
+        user = Environ$("Username")
+    '    If user = "jsikorski" Then
+    '        file_auth = True
+    '        Exit Function
+    '    End If
+        
+        logMenu.TextBox2.Value = user
+        logMenu.Show
+        pw = logMenu.TextBox1.Value
+        user = logMenu.TextBox2.Value
+        Unload logMenu
+        Do While rg.Offset(i, 0) <> vbNullString
+            If user = rg.Offset(i, 0) Then
+                auth = True
+                uNum = i
             End If
+            i = i + 1
+        Loop
+        If auth = False Then
+            MsgBox ("YOU ARE NOT AUTHORIZED TO VIEW THIS FILE!")
+            ThisWorkbook.Close
         End If
-    Loop
-    file_auth = True
+        
+        pw = encryptPassword(pw)
+        Do While encryptPassword(rg.Offset(uNum, 1).Value) <> pw
+            If attempt < 3 Then
+                Set logMenu = New loginMenu
+                logMenu.TextBox2.Value = user
+                logMenu.Show
+                pw = logMenu.TextBox1.Value
+                user = logMenu.TextBox2.Value
+                Unload logMenu
+                Do While rg.Offset(i, 0) <> vbNullString
+                    If user = rg.Offset(i, 0) Then
+                        auth = True
+                        uNum = i
+                    End If
+                    i = i + 1
+                Loop
+                attempt = attempt + 1
+            Else
+                MsgBox "You have made 3 failed attempts!", 16, "FAILED UNLOCK"
+                If user <> "jsikorski" Then
+                    file_auth = False
+                Else
+                    Exit Do
+                End If
+            End If
+        Loop
+        file_auth = True
+    Else
+        file_auth = False
+    End If
 End Function
 
 Public Function saveWeekRoster(ByRef ws As Worksheet) As Integer

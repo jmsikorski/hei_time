@@ -67,7 +67,7 @@ update_done:
     Exit Sub
 10:
     Dim ans As Integer
-    Dim xfile As String
+    Dim xFile As String
     With Application.FileDialog(msoFileDialogOpen)
         .Title = "Find Attendance Tracking Roster"
         .Filters.Add "Excel Files", "*.xls*", 1
@@ -77,10 +77,10 @@ update_done:
             Exit Sub
         Else
             Workbooks.Open .SelectedItems(1)
-            xfile = .SelectedItems(1)
+            xFile = .SelectedItems(1)
         End If
     End With
-    Set mb = Workbooks(xfile)
+    Set mb = Workbooks(xFile)
     Resume Next
     Exit Sub
 20:
