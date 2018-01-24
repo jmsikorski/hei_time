@@ -1,7 +1,7 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} loginMenu 
    Caption         =   "Select Job Number"
-   ClientHeight    =   5130
+   ClientHeight    =   7305
    ClientLeft      =   120
    ClientTop       =   465
    ClientWidth     =   8280.001
@@ -13,12 +13,18 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 
+
 Private Sub loginButton_Click()
     Me.Hide
 End Sub
 
 Private Sub mCancel_Click()
     mainMenu.mCancel_Click
+End Sub
+
+Private Sub reqUser_Click()
+    Me.Hide
+    reqMenu.Show
 End Sub
 
 Private Sub UserForm_Initialize()

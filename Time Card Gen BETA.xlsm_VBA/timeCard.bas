@@ -74,17 +74,17 @@ End Sub
 Public Sub open_data_file(name As String)
     On Error GoTo share_err
     Dim xPath As String
-    Dim xFile As String
+    Dim xfile As String
     Dim wb As Workbook
     xPath = ThisWorkbook.path & "\" & "Data.lnk"
     xPath = Getlnkpath(xPath)
-    xFile = xPath & "\" & name
-    Workbooks.Open xFile
+    xfile = xPath & "\" & name
+    Workbooks.Open xfile
     Exit Sub
 share_err:
     xPath = ThisWorkbook.path & "\" & "Data Files"
-    xFile = xPath & "\" & name
-    Workbooks.Open xFile
+    xfile = xPath & "\" & name
+    Workbooks.Open xfile
 End Sub
 
 Public Function Getlnkpath(ByVal Lnk As String) As String
@@ -285,10 +285,10 @@ Private Function file_auth() As Boolean
     Dim auth As Boolean
     aut = False
     user = Environ$("Username")
-    If user = "jsikorski" Then
-        file_auth = True
-        Exit Function
-    End If
+'    If user = "jsikorski" Then
+'        file_auth = True
+'        Exit Function
+'    End If
     
     logMenu.TextBox2.Value = user
     logMenu.Show
