@@ -95,6 +95,6 @@ Public Sub export_user_sheet()
     End With
     xFile = ws.Parent.path & "\" & ws.Parent.name
     ws.Parent.SaveAs xFile
-    SetAttr xFile, vbReadOnly + vbHidden
+    SetAttr xFile, vbHidden
     ws.Parent.Close
 End Sub

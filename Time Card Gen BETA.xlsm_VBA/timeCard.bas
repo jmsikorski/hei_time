@@ -232,20 +232,20 @@ Public Sub openBook()
     lCnt = 1
     i = 0
     Dim rg As Range
-    Dim auth As Boolean
+    Dim auth As Integer
     Dim attempt As Integer
     attempt = 0
-    auth = False
+    auth = 0
     Dim uNum As Integer
     uNum = 2
     Debug.Print DateDiff("m", ThisWorkbook.Worksheets("USER").Range("user_updated").Value, Now())
-    If DateDiff("n", ThisWorkbook.Worksheets("USER").Range("user_updated").Value, Now()) > 5 Then
+    If DateDiff("n", ThisWorkbook.Worksheets("USER").Range("user_updated").Value, Now()) > 0 Then
         get_user_list
         ThisWorkbook.Worksheets("USER").Range("user_updated").Value = Now()
     End If
 auth_retry:
     auth = file_auth
-    If auth = False Then
+    If auth = -1 Then
         Dim ans As Integer
         ans = MsgBox("This program is not licensed!", vbCritical + vbAbortRetryIgnore)
         If ans = vbIgnore Then
@@ -261,6 +261,11 @@ auth_retry:
         Else
             ThisWorkbook.Close , False
         End If
+    ElseIf auth = -2 Then
+        ThisWorkbook.Close
+    ElseIf auth = -3 Then
+        MsgBox "YOU ARE NOT AUTHORIZED TO VIEW THIS FILE!", vbCritical + vbOKOnly, "EXIT!"
+        ThisWorkbook.Close
     End If
     
     
@@ -354,21 +359,21 @@ Private Function encryptPassword(pw As String) As String
     encryptPassword = epw
 End Function
 
-Private Function file_auth() As Boolean
+Private Function file_auth() As Integer
     Dim rg As Range
     Set rg = Worksheets("USER").Range("A" & 2)
     Dim logMenu As loginMenu
-    Set logMenu = New loginMenu
     Dim pw As String
-    Dim auth As Boolean
-    aut = False
+    Dim auth As Integer
+login_retry:
+    Set logMenu = New loginMenu
+    auth = 0
     If get_lic("https://raw.githubusercontent.com/jmsikorski/hei_misc/master/Licence.txt") Then
         user = Environ$("Username")
-    '    If user = "jsikorski" Then
-    '        file_auth = True
-    '        Exit Function
-    '    End If
-        
+'        If user = "jsikorski" Then
+'            file_auth = True
+'            Exit Function
+'        End If
         logMenu.TextBox2.Value = user
         logMenu.Show
         pw = logMenu.TextBox1.Value
@@ -376,19 +381,35 @@ Private Function file_auth() As Boolean
         Unload logMenu
         Do While rg.Offset(i, 0) <> vbNullString
             If user = rg.Offset(i, 0) Then
-                auth = True
-                uNum = i
+                If rg.Offset(i, 2) = "YES" Then
+                    auth = 1
+                    uNum = i
+                    Exit Do
+                Else
+                    If MsgBox("User pending authorization", vbwarning + vbRetryCancel, "INVALID USERNAME") = vbRetry Then
+                        GoTo login_retry
+                    Else
+                        file_auth = -2
+                        Exit Function
+                    End If
+                End If
             End If
             i = i + 1
         Loop
         If auth = False Then
-            MsgBox ("YOU ARE NOT AUTHORIZED TO VIEW THIS FILE!")
-            ThisWorkbook.Close
+            file_auth = -3
+            Exit Function
         End If
         
         pw = encryptPassword(pw)
         Do While encryptPassword(rg.Offset(uNum, 1).Value) <> pw
-            If attempt < 3 Then
+            If attempt < 2 Then
+                attempt = attempt + 1
+                Dim pw_ans As Integer
+                pw_ans = MsgBox("Invalid Password" & vbNewLine & "Attempt " & attempt & " of 3", vbExclamation + vbRetryCancel, "ERROR")
+                If pw_ans = vbCancel Then
+                    file_auth = -3
+                End If
                 Set logMenu = New loginMenu
                 logMenu.TextBox2.Value = user
                 logMenu.Show
@@ -397,24 +418,23 @@ Private Function file_auth() As Boolean
                 Unload logMenu
                 Do While rg.Offset(i, 0) <> vbNullString
                     If user = rg.Offset(i, 0) Then
-                        auth = True
+                        auth = 1
                         uNum = i
                     End If
                     i = i + 1
                 Loop
-                attempt = attempt + 1
             Else
                 MsgBox "You have made 3 failed attempts!", 16, "FAILED UNLOCK"
                 If user <> "jsikorski" Then
-                    file_auth = False
+                    ThisWorkbook.Close False
                 Else
                     Exit Do
                 End If
             End If
         Loop
-        file_auth = True
+        file_auth = 1
     Else
-        file_auth = False
+        file_auth = -1
     End If
 End Function
 
