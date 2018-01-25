@@ -54,7 +54,9 @@ Public Sub addMenu(mType As Integer)
         Set menuList(UBound(menuList)) = tmp
     End If
 End Sub
-
+Public Sub test_genLead()
+    gen_TimeCard.genLead
+End Sub
 Private Sub copy_tables(ByRef wb As Workbook)
     Dim ws As Worksheet
     Set ws = wb.Worksheets("LEAD")
@@ -102,6 +104,9 @@ Public Function Getlnkpath(ByVal Lnk As String) As String
        .Close
    End With
 End Function
+Sub t1()
+    ActiveWorkbook.Worksheets("ROSTER").Visible = True
+End Sub
 Public Sub genLeadSheets()
     Application.ScreenUpdating = False
     Application.DisplayAlerts = False
@@ -508,7 +513,6 @@ Public Sub savePacket()
     On Error GoTo 0
     xlFile = xlPath & jobNum & "_Week_" & we & ".xlsx"
     open_data_file "Packet Template.xlsx"
-    Stop
     Set bk = Workbooks("Packet Template.xlsx")
     saveWeekRoster bk.Sheets("SAVE")
     If genRoster(bk, bk.Worksheets("ROSTER")) = -1 Then

@@ -127,7 +127,6 @@ Private Sub spDone_Click()
             Next x
         Next i
     Next ld
-    Stop
     savePacket
     genLeadSheets
     For i = 0 To UBound(menuList) - 1

@@ -69,7 +69,7 @@ update_done:
     Dim ans As Integer
     Dim xFile As String
     With Application.FileDialog(msoFileDialogOpen)
-        .Title = "Find Attendance Tracking Roster"
+        .title = "Find Attendance Tracking Roster"
         .Filters.Add "Excel Files", "*.xls*", 1
         .InitialFileName = ThisWorkbook.path & "\"
         ans = .Show
