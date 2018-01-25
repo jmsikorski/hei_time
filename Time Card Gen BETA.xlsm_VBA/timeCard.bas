@@ -57,7 +57,7 @@ End Sub
 
 Private Sub copy_tables(ByRef wb As Workbook)
     Dim ws As Worksheet
-    Set ws = wb.Worksheets("ROSTER")
+    Set ws = wb.Worksheets("LEAD")
     ws.Unprotect
     ws.ListObjects("Monday").DataBodyRange.Copy
     ws.Range("Tuesday").PasteSpecial xlPasteValues
@@ -135,14 +135,16 @@ Public Sub genLeadSheets()
     Dim e_cnt As Integer
     On Error GoTo 0
     Dim r_size As Integer
+    Dim bk As Workbook
+    Set bk = Workbooks(jobNum & "_Week_" & we & ".xlsx")
     For i = 0 To UBound(weekRoster)
         e_cnt = 1
         Dim iTemp As Employee
         Set iTemp = weekRoster(i, 0)
         Dim lsPath As String
+        Dim ls As Workbook
         lsPath = iTemp.getLName & "_Week_" & we & ".xlsx"
         lsPath = xlPath + lsPath
-        Dim ls As Workbook
         open_data_file "Lead Card - Office.xlsm"
         Set ls = Workbooks("Lead Card - Office.xlsm")
         SetAttr ls.path, vbNormal
@@ -150,12 +152,12 @@ Public Sub genLeadSheets()
         Application.EnableEvents = False
         ls.SaveAs lsPath, 51
         Application.EnableEvents = True
-        With ls.Worksheets("ROSTER").Range("Monday").Cells(1, 1)
-            ls.Worksheets("ROSTER").Unprotect
+        With ls.Worksheets("LEAD").Range("Monday").Cells(1, 1)
+            ls.Worksheets("LEAD").Unprotect
             .Value = iTemp.getClass
             .Offset(0, 1).Value = iTemp.getFName & " " & iTemp.getLName
             .Offset(0, 2).Value = iTemp.getNum
-            ls.Worksheets("ROSTER").Protect
+            ls.Worksheets("LEAD").Protect
         End With
         bks.Add ls
         For x = 1 To UBound(weekRoster, 2)
@@ -164,23 +166,30 @@ Public Sub genLeadSheets()
             If xTemp Is Nothing Then
             Else
                 e_cnt = e_cnt + 1
-                With ls.Worksheets("ROSTER").Range("Monday").Cells(x + 1, 1)
-                    ls.Worksheets("ROSTER").Unprotect
+                With ls.Worksheets("LEAD").Range("Monday").Cells(x + 1, 1)
+                    ls.Worksheets("LEAD").Unprotect
                     .Value = iTemp.getClass
                     .Offset(0, 1).Value = xTemp.getFName & " " & xTemp.getLName
                     .Offset(0, 2).Value = xTemp.getNum
-                    ls.Worksheets("ROSTER").Protect
+                    ls.Worksheets("LEAD").Protect
                 End With
             End If
         Next x
-        ls.Worksheets("ROSTER").Unprotect
+        ls.Worksheets("LEAD").Unprotect
         For n = 1 To 7
             For p = e_cnt + 1 To 15
-                ls.Worksheets("ROSTER").ListObjects(n).ListRows(e_cnt + 1).Delete
+                ls.Worksheets("LEAD").ListObjects(n).ListRows(e_cnt + 1).Delete
             Next p
         Next n
-        ls.Worksheets("ROSTER").Protect
+        ls.Worksheets("LEAD").Protect
         copy_tables ls
+        If genRoster(bk, ls.Worksheets("ROSTER"), i + 1) = -1 Then
+            MsgBox ("ERROR PRINTING ROSTER")
+        End If
+        bk.Worksheets("SAVE").Visible = xlVeryHidden
+        ls.Worksheets("ROSTER").Visible = xlVeryHidden
+        Application.DisplayAlerts = True
+        Application.ScreenUpdating = True
     Next i
     If jobPath = vbNullString Then
         MsgBox ("ERROR!")
@@ -191,6 +200,7 @@ Public Sub genLeadSheets()
         ls.Save
         ls.Close
     Next ls
+    bk.Close False
 '    wb.Worksheets("LEAD").Visible = False
     ThisWorkbook.Protect xPass
     Application.ScreenUpdating = True
@@ -400,8 +410,6 @@ login_retry:
             file_auth = -3
             Exit Function
         End If
-        
-        pw = encryptPassword(pw)
         Do While encryptPassword(rg.Offset(uNum, 1).Value) <> pw
             If attempt < 2 Then
                 attempt = attempt + 1
@@ -489,24 +497,25 @@ Public Sub savePacket()
     MkDir xlPath
     On Error GoTo 0
     xlFile = xlPath & jobNum & "_Week_" & we & ".xlsx"
-    Set bk = Workbooks.Add
-    saveWeekRoster bk.Sheets(1)
-    If genRoster(bk, wb.Worksheets("ROSTER TEMPLATE")) = -1 Then
+    open_data_file "Packet Template.xlsx"
+    Stop
+    Set bk = Workbooks("Packet Template.xlsx")
+    saveWeekRoster bk.Sheets("SAVE")
+    If genRoster(bk, bk.Worksheets("ROSTER")) = -1 Then
         MsgBox ("ERROR PRINTING ROSTER")
     End If
-    moveRoster wb, bk
+'    moveRoster wb, bk
     bk.Worksheets("SAVE").Visible = xlVeryHidden
     If testFileExist(xlFile) = 1 Then
         Kill xlFile
     End If
     bk.SaveAs xlFile
-    bk.Close
     Application.DisplayAlerts = True
     Application.ScreenUpdating = True
     On Error GoTo 0
 End Sub
 
-Public Function genRoster(ByRef wb As Workbook, ByRef ws As Worksheet) As Integer
+Public Function genRoster(ByRef wb As Workbook, ByRef ws As Worksheet, Optional lead As Integer) As Integer
     On Error GoTo 10
     Application.DisplayAlerts = False
     wb.Worksheets("SAVE").Activate
@@ -515,28 +524,61 @@ Public Function genRoster(ByRef wb As Workbook, ByRef ws As Worksheet) As Intege
     we = calcWeek(Date)
     Dim cnt As Integer
     cnt = 0
-    With ws
-        .Range("job_num").Value = jobNum
-        .Range("job_name").Value = jobName
-        .Range("week_ending").Value = we
-        .Range("emp").Copy
-        For Each tmp In wb.Worksheets("SAVE").Range("A1", wb.Worksheets("SAVE").Range("A1").End(xlDown))
-            .Range("emp_count").Offset(cnt, 0).Value = cnt + 1
-            .Range("emp_class").Offset(cnt, 0).Value = tmp.Offset(0, 2).Value
-            .Range("emp_name").Offset(cnt, 0).Value = tmp.Offset(0, 4).Value & " " & tmp.Offset(0, 3).Value
-            .Range("emp_num").Offset(cnt, 0).Value = tmp.Offset(0, 5).Value
-            If (tmp.Offset(0, 6)) Then
-                .Range("emp_phaseCode").Offset(cnt, 0).Value = "88070-08 Per Diem"
-            Else
-                .Range("emp_phaseCode").Offset(cnt, 0).Value = "N/A"
-            End If
-            .Range("emp").Offset(cnt, 0).PasteSpecial Paste:=xlPasteFormats
-            cnt = cnt + 1
-        Next tmp
-        .Range("emp").Borders(xlEdgeTop).LineStyle = xlContinuous
-        .Range("emp").Borders(xlEdgeTop).Weight = xlThick
-        
-    End With
+    If lead = 0 Then
+        With ws
+            .Range("job_num").Value = jobNum
+            .Range("job_name").Value = jobName
+            .Range("week_ending").Value = we
+            .Range("emp").Offset(1, 0).Copy
+            For Each tmp In wb.Worksheets("SAVE").Range("A1", wb.Worksheets("SAVE").Range("A1").End(xlDown))
+                .Range("emp_count").Offset(cnt, 0).Value = cnt + 1
+                .Range("emp_class").Offset(cnt, 0).Value = tmp.Offset(0, 2).Value
+                .Range("emp_name").Offset(cnt, 0).Value = tmp.Offset(0, 4).Value & " " & tmp.Offset(0, 3).Value
+                .Range("emp_num").Offset(cnt, 0).Value = tmp.Offset(0, 5).Value
+                If (tmp.Offset(0, 6)) Then
+                    .Range("emp_phaseCode").Offset(cnt, 0).Value = "88070-08 Per Diem"
+                Else
+                    .Range("emp_phaseCode").Offset(cnt, 0).Value = "N/A"
+                End If
+                If cnt > 1 Then
+                    .Range("emp").Offset(cnt, 0).PasteSpecial Paste:=xlPasteFormats
+                End If
+                cnt = cnt + 1
+            Next tmp
+            .Range("emp").Borders(xlEdgeTop).LineStyle = xlContinuous
+            .Range("emp").Borders(xlEdgeTop).Weight = xlThick
+            
+        End With
+    Else
+        With ws
+            .Range("job_num").Value = jobNum
+            .Range("job_name").Value = jobName
+            .Range("week_ending").Value = we
+            .Range("emp").Copy
+            ws.Activate
+            For Each tmp In wb.Worksheets("SAVE").Range("A1", wb.Worksheets("SAVE").Range("A1").End(xlDown))
+                If tmp.Value = lead - 1 Then
+                    .Range("emp_count").Offset(cnt, 0).Value = cnt + 1
+                    .Range("emp_class").Offset(cnt, 0).Value = tmp.Offset(0, 2).Value
+                    .Range("emp_name").Offset(cnt, 0).Value = tmp.Offset(0, 4).Value & " " & tmp.Offset(0, 3).Value
+                    .Range("emp_num").Offset(cnt, 0).Value = tmp.Offset(0, 5).Value
+                    If (tmp.Offset(0, 6)) Then
+                        .Range("emp_phaseCode").Offset(cnt, 0).Value = "88070-08 Per Diem"
+                    Else
+                        .Range("emp_phaseCode").Offset(cnt, 0).Value = "N/A"
+                    End If
+                    If cnt > 1 Then
+                        .Range("emp").Offset(cnt, 0).PasteSpecial Paste:=xlPasteFormats
+                    End If
+                    cnt = cnt + 1
+                ElseIf tmp.Value > lead Then
+                    Exit For
+                End If
+            Next tmp
+            .Range("emp").Borders(xlEdgeTop).LineStyle = xlContinuous
+            .Range("emp").Borders(xlEdgeTop).Weight = xlThick
+        End With
+    End If
     Application.DisplayAlerts = True
     On Error GoTo 0
     genRoster = 1
@@ -550,8 +592,6 @@ Public Sub moveRoster(wb As Workbook, bk As Workbook)
     wb.Unprotect xPass
     wb.Worksheets("ROSTER TEMPLATE").Visible = xlSheetVisible
     wb.Worksheets("ROSTER TEMPLATE").Copy after:=bk.Worksheets(bk.Sheets.count)
-    wb.Worksheets("6-WEEK SCHEDULE").Visible = xlSheetVisible
-    wb.Worksheets("6-WEEK SCHEDULE").Copy after:=bk.Worksheets(bk.Sheets.count)
     bk.Worksheets("ROSTER TEMPLATE").name = "ROSTER"
     With wb.Worksheets("ROSTER TEMPLATE").Range("emp")
         wb.Worksheets("ROSTER TEMPLATE").Range(.Offset(1, 0), .End(xlDown)).Clear
@@ -576,7 +616,6 @@ Public Sub moveRoster(wb As Workbook, bk As Workbook)
         .Range("job_name") = jobName
         .Range("week_ending") = week
     End With
-    wb.Worksheets("6-WEEK SCHEDULE").Visible = xlSheetHidden
     wb.Worksheets("ROSTER TEMPLATE").Visible = xlSheetHidden
     wb.Protect xPass
 
