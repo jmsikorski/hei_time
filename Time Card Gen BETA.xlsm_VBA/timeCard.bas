@@ -794,6 +794,23 @@ Private Sub loadMenu() 'ws As Worksheet)
     wb.Activate
 End Sub
 
+Public Function get_job_value(Optional c As Range) As Integer
+    If c Is Nothing Then
+        Set c = Application.Caller
+    End If
+    Dim tmp As Double
+    tmp = 0
+    Dim rng As Range
+    Dim job_cnt As Integer
+    Set rng = ThisWorkbook.Worksheets("USER").Range("D" & c.Row)
+    job_cnt = c.Column - rng.Column - 1
+    For i = 0 To job_cnt
+        If rng.Offset(0, i).Value = True Then
+            tmp = tmp + Application.WorksheetFunction.Power(2, i)
+        End If
+    Next i
+    get_job_value = tmp
+End Function
 Public Sub testPacket()
 Attribute testPacket.VB_ProcData.VB_Invoke_Func = "r\n14"
     loadMenu

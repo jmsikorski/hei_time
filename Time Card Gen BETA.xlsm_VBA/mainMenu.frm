@@ -107,13 +107,19 @@ Private Sub UserForm_Initialize()
         .Top = Application.Top + (0.5 * Application.Height) - (0.5 * .Height)
     End With
     Dim cJob As Range
-    Set cJob = Worksheets("JOBS").UsedRange
+    Dim uNum As Range
     For Each cJob In Worksheets("JOBS").Range("jobList")
-      With Me.ComboBox1
-        .AddItem cJob.Value
-        .List(.ListCount - 1, 1) = cJob.Offset(0, 1).Value
+        With Me.ComboBox1
+        For Each uNum In Worksheets("USER").Range("A2", Worksheets("USER").Range("A2").End(xlDown))
+            If uNum.Value = user Then
+                If uNum.Offset(0, cJob.Row + 2) = True Then
+                    .AddItem cJob.Value
+                    .List(.ListCount - 1, 1) = cJob.Offset(0, 1).Value
+                End If
+            End If
+        Next
       End With
-    Next cJob
+    Next
 End Sub
 
 Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
