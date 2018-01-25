@@ -23,7 +23,6 @@ Private Sub reqSubmit_Click()
     Dim xEmailObj As Object
     Dim send_to As String
     On Error GoTo 0
-    Stop
     Set xOutlookObj = CreateObject("Outlook.Application")
     Set xEmailObj = xOutlookObj.CreateItem(olMailItem)
     Dim name As String
@@ -66,10 +65,14 @@ Private Sub reqSubmit_Click()
         .display ' REMOVE AFTER BETA
 '        .Send
     End With
+    Application.DisplayAlerts = False
+    Application.ScreenUpdating = False
+    user_form.export_user_sheet
     MsgBox "Thank you for your request." & vbNewLine & "You will recieve an email when your account is activated.", vbInformation + vbOKOnly, "SUBMITTED"
 reqSubmit_sub_end:
     Me.Hide
 '    ThisWorkbook.Close False
+    Stop
 End Sub
 
 Private Function find_user(user As String) As Integer
@@ -114,8 +117,9 @@ Private Function encryptPassword(pw As String) As String
         pwi(i) = Asc(test(i))
         pw = Right(pw, Len(pw) - 1)
         pwi(i) = pwi(i) Xor ThisWorkbook.Worksheets("KEY").Range("A" & x).Value
-        If pwi(i) = 0 Then pwi(i) = 1
+        'If pwi(i) = 0 Then pwi(i) = 1
         epw = epw & Chr(pwi(i))
+        x = x + 1
     Next i
     encryptPassword = epw
 End Function
