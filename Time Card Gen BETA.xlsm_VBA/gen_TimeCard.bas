@@ -12,7 +12,7 @@ Enum day
     Sunday = 7
 End Enum
 
-Sub getSheet(book As String, sheet As String, start As Integer, finish As Integer)
+Private Sub getSheet(book As String, sheet As String, start As Integer, finish As Integer)
 
     Dim wb As Workbook
     Dim temp As Integer
@@ -57,7 +57,7 @@ Public Sub showBooks()
         MsgBox ("Sorry this toy is not for you to play with")
     End If
 End Sub
-Sub openFiles()
+Private Sub openFiles()
 'UpdateByExtendoffice20160623
     Dim list As Range
     Dim wb As Workbook
@@ -84,7 +84,7 @@ Sub openFiles()
     Loop
 End Sub
 
-Function getBook() As String
+Private Function getBook() As String
     Dim book As String
     book = Application.GetOpenFilename(title:="Please choose a file to open", _
         FileFilter:="Excel Files *.xls* (*.xls*),")
@@ -263,7 +263,7 @@ Public Sub genLead(Optional num As Integer)
     Application.DisplayAlerts = True
 End Sub
 
-Sub showlist(e As Collection)
+Public Sub showlist(e As Collection)
     Dim emp As Employee
     For Each emp In e
         MsgBox ("First Name: " & emp.getFName & " " & emp.getLName)
@@ -271,7 +271,7 @@ Sub showlist(e As Collection)
         
 End Sub
 
-Function sheetExists(sheetToFind As String) As Boolean
+Private Function sheetExists(sheetToFind As String) As Boolean
     sheetExists = False
     For Each sheet In Worksheets
         If sheetToFind = sheet.name Then
@@ -281,33 +281,8 @@ Function sheetExists(sheetToFind As String) As Boolean
     Next sheet
 End Function
 
-Sub genRoster()
-    Dim tNum As Integer
-    Dim emp As Employee
-    Dim x As Integer
-    Set emp = New Employee
-    x = 1
-    For Each emp In eRoster
-            ThisWorkbook.Worksheets("ROSTER").Activate
-            ActiveSheet.Cells(8 + x, 1).Select
-            With ActiveCell
-                .Value = x
-                .BorderAround Weight:=xlThin
-                .Offset(0, 1).Value = emp.getClass
-                .Offset(0, 1).BorderAround Weight:=xlThin
-                .Offset(0, 2).Value = emp.getFName & " " & emp.getLName
-                .Offset(0, 2).BorderAround Weight:=xlThin
-                .Offset(0, 3).Value = emp.getNum
-                .Offset(0, 3).BorderAround Weight:=xlThin
-                .Offset(0, 4).Value = "88070-80 Per Diem"
-                .Offset(0, 4).BorderAround Weight:=xlThin
-                
-            End With
-            x = x + 1
-            Next emp
-End Sub
 
-Sub genEmpFromLead()
+Private Sub genEmpFromLead()
     Application.DisplayAlerts = Flase
 Set wb = ThisWorkbook
     Dim file As String
@@ -500,7 +475,7 @@ Set wb = ThisWorkbook
     Application.DisplayAlerts = True
 End Sub
 
-Function getClass(emp As Employee) As String
+Private Function getClass(emp As Employee) As String
     Dim i As Integer
     i = 1
 5:
@@ -512,19 +487,15 @@ Function getClass(emp As Employee) As String
     End If
 End Function
 
-Sub copySheet()
-    Workbooks("Design File v2.xlsm").Worksheets("MASTER").Copy before:=ThisWorkbook.Worksheets(1)
-    
-End Sub
 
-Sub delSheet(sht As String)
+Private Sub delSheet(sht As String)
     Application.DisplayAlerts = False
     On Error Resume Next
     ThisWorkbook.Worksheets(sht).Delete
     Application.DisplayAlerts = True
 End Sub
 
-Sub genTags()
+Public Sub genTags()
     Set wb = ThisWorkbook
     wb.Application.DisplayAlerts = False
     Dim xlPath As String

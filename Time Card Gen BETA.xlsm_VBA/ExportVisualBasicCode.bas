@@ -15,7 +15,6 @@ Public Sub ExportVBA()
     Dim dir_main As String
     Dim extension As String
     Dim fso As New FileSystemObject
-    Dim Err As Object
 
     dir_main = "C:\Users\jsikorski\Desktop\Time Card Project - JASON\ALL VBA CODE\" & ThisWorkbook.name & "_VBA_" & Format(Now(), "mm.dd.yy_hh.mm.ss")
     directory = "C:\Users\jsikorski\Desktop\Time Card Project - JASON\hei_time\" & ThisWorkbook.name & "_VBA"
