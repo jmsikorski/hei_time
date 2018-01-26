@@ -59,7 +59,7 @@ Public Sub mCancel_Click()
                     logMenu.Hide
                 End If
                 If mMenu.Visible = True Then
-                    mMenu.Hide
+                    Controls("mMenu").Hide
                 End If
                 If sMenu.Visible = True Then
                     sMenu.Hide
@@ -115,7 +115,7 @@ Private Sub UserForm_Initialize()
             If uNum.Value = user Then
                 If uNum.Offset(0, cJob.Row + 2) = True Then
                     .AddItem cJob.Value
-                    .list(.ListCount - 1, 1) = cJob.Offset(0, 1).Value
+                    .List(.ListCount - 1, 1) = cJob.Offset(0, 1).Value
                 End If
             End If
         Next

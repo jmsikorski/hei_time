@@ -8,7 +8,6 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = True
 Private Sub Workbook_BeforeClose(Cancel As Boolean)
-    On Error Resume Next
     Call ExportVBA
     Call export_user_sheet
     For i = 1 To ThisWorkbook.Sheets.count

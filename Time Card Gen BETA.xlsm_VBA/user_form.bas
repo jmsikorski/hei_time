@@ -43,13 +43,12 @@ Public Sub get_user_list()
     Dim xPath As String
     Dim ws As Worksheet
     Dim rng As Range
-    Dim fRng As Range
     timeCard.open_data_file "User.xlsx", "hei3078USER"
     Set ws = Workbooks("User.xlsx").Worksheets("USER")
     Set rng = ws.UsedRange
     With wb.Worksheets("USER")
-        .UsedRange.Offset(1, 0).Clear
-        .Range("A2", .Range("A2").Offset(rng.Rows.count - 1, rng.Columns.count - 1)) = rng.Offset(1, 0).Value
+        .UsedRange.Clear
+        .Range("A1", .Range("A1").Offset(rng.Rows.count - 1, rng.Columns.count - 1)) = rng.Value
         .Range("user_updated") = Now()
     End With
     ws.Parent.Close False

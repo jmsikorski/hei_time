@@ -338,59 +338,49 @@ Private Function get_lic(url As String) As Boolean
     If winhttp.responseText = "True" Then get_lic = True
 End Function
 
-Private Sub show_key()
-    ThisWorkbook.Worksheets("KEY").Visible = True
-End Sub
-Private Sub hide_key()
-    ThisWorkbook.Worksheets("KEY").Visible = False
-End Sub
-
 Public Function publicEncryptPassword(pw As String) As String
     If InputBox("Authorization code:", "RESTRICED") <> 12292018 Then
         publicEncryptPassword = "ERROR"
         Exit Function
     End If
-    Dim pwi As Long
-    Dim test As String
+    Dim pwi() As Long
+    Dim test() As String
     Dim epw As String
-    Dim key As Long
     epw = vbnullStrig
+    ReDim test(Len(pw))
+    ReDim pwi(Len(pw))
+    Dim x As Integer
+    x = 1
     For i = 0 To Len(pw) - 1
-        test = Left(pw, 1)
-        pwi = Asc(test)
+        test(i) = Left(pw, 1)
+        pwi(i) = Asc(test(i))
         pw = Right(pw, Len(pw) - 1)
-        key = ThisWorkbook.Worksheets("KEY").Range("A" & i + 1).Value
-        If key = pwi Then key = key + 128
-        pwi = pwi Xor key
-        If pwi = key + 128 Then
-            pwi = key
-        End If
-        epw = epw & Chr(pwi)
+        pwi(i) = pwi(i) Xor ThisWorkbook.Worksheets("KEY").Range("A" & x).Value
+        If pwi(i) = 0 Then pwi(i) = 1
+        epw = epw & Chr(pwi(i))
     Next i
     publicEncryptPassword = epw
 End Function
 
 Private Function encryptPassword(pw As String) As String
-    Dim pwi As Long
-    Dim test As String
+    Dim pwi() As Long
+    Dim test() As String
     Dim epw As String
-    Dim key As Long
     epw = vbnullStrig
+    ReDim test(Len(pw))
+    ReDim pwi(Len(pw))
+    Dim x As Integer
+    x = 1
     For i = 0 To Len(pw) - 1
-        test = Left(pw, 1)
-        pwi = Asc(test)
+        test(i) = Left(pw, 1)
+        pwi(i) = Asc(test(i))
         pw = Right(pw, Len(pw) - 1)
-        key = ThisWorkbook.Worksheets("KEY").Range("A" & i + 1).Value
-        If key = pwi Then key = key + 128
-        pwi = pwi Xor key
-        If pwi = key + 128 Then
-            pwi = key
-        End If
-        epw = epw & Chr(pwi)
+        pwi(i) = pwi(i) Xor ThisWorkbook.Worksheets("KEY").Range("A" & x).Value
+        If pwi(i) = 0 Then pwi(i) = 1
+        epw = epw & Chr(pwi(i))
     Next i
     encryptPassword = epw
 End Function
-
 
 Private Function file_auth() As Integer
     Dim rg As Range
