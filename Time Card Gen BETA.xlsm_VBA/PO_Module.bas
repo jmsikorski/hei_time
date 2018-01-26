@@ -3,7 +3,7 @@ Attribute VB_Name = "PO_Module"
 Public Sub send_req()
     Dim xSht As Worksheet
     Dim xOutlookObj As Object
-    Dim xEmailObj As Outlook.MailItem
+    Dim xEmailObj As Object ' Outlook.MailItem
     Dim send_to As String
     Dim xYesorNo As Integer
     Set xSht = ActiveSheet

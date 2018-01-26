@@ -90,8 +90,12 @@ Private Sub spAdd_Click()
 End Sub
 
 Private Sub spDone_Click()
+    Application.DisplayAlerts = False
+    Application.ScreenUpdating = False
+    Unload sMenu
+    Unload lMenu
     Dim ws As Worksheet
-    Set ws = Worksheets("ROSTER")
+    Set ws = ThisWorkbook.Worksheets("ROSTER")
     Dim lBox As Integer
     Dim tlist As Object
     lBox = Me.Controls.count - 6
@@ -127,14 +131,18 @@ Private Sub spDone_Click()
             Next x
         Next i
     Next ld
-    savePacket
-    genLeadSheets
     For i = 0 To UBound(menuList) - 1
         Unload menuList(i)
     Next i
-    Unload sMenu
-    Unload lMenu
+    Application.WindowState = xlMinimized
+    Application.Visible = False
+    savePacket
+    genLeadSheets
+    Application.Visible = True
+    Application.WindowState = xlMaximized
     mMenu.Show
+    Application.DisplayAlerts = True
+    Application.ScreenUpdating = True
 End Sub
 
 Public Sub setSheet(menuNum As Integer)
@@ -258,7 +266,7 @@ Public Sub setSheet(menuNum As Integer)
             .Width = wide * (i + 1)
         End With
     Next i
-    GoTo 20
+    Exit Sub
 10
     temp.emnum = -1
     Resume Next

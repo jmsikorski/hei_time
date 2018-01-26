@@ -78,6 +78,7 @@ update_done:
         Else
             Workbooks.Open .SelectedItems(1)
             xFile = .SelectedItems(1)
+            SetAttr xFile, vbNormal
         End If
     End With
     Set mb = Workbooks(xFile)

@@ -35,52 +35,13 @@ Private Sub smBuild_Click()
 End Sub
 
 Private Sub smEdit_Click()
-    Application.DisplayAlerts = False
-    Application.ScreenUpdating = False
-    Dim we As String
-    we = Format(week, "mm.dd.yy")
-    Dim wb As Workbook
-    Set wb = ThisWorkbook
-    Dim bk As Workbook
-    Dim xlFile As String
-    Dim aVal As Integer
-    Dim bVal As Integer
-    Dim i As Integer
-    Dim tmp As Range
-    i = 0
-    xlFile = jobPath & "\" & jobNum & "\TimePackets\Week_" & we & "\" & jobNum & "_Week_" & we & ".xlsx"
-    On Error GoTo 10
-    Application.Workbooks.Open xlFile
-    On Error GoTo 0
-    Set bk = Workbooks(jobNum & "_Week_" & we & ".xlsx")
-    bk.Worksheets("SAVE").Visible = xlSheetVisible
-    For Each tmp In bk.Worksheets("Save").Range("A1", bk.Worksheets("SAVE").Range("A1").End(xlDown))
-        If tmp.Value > aVal Then aVal = tmp.Value
-        If tmp.Offset(0, 1).Value > bVal Then bVal = tmp.Offset(0, 1).Value
-    Next tmp
-    ReDim weekRoster(aVal, eCount)
-    For Each tmp In bk.Worksheets("Save").Range("A1", bk.Worksheets("SAVE").Range("A1").End(xlDown))
-        Dim xlEmp As Employee
-        Set xlEmp = New Employee
-        xlEmp.emClass = tmp.Offset(0, 2)
-        xlEmp.elName = tmp.Offset(0, 3)
-        xlEmp.efName = tmp.Offset(0, 4)
-        xlEmp.emnum = tmp.Offset(0, 5)
-        xlEmp.emPerDiem = tmp.Offset(0, 6)
-        Set weekRoster(tmp.Offset(0, 0).Value, tmp.Offset(0, 1).Value) = xlEmp
-    Next tmp
-    bk.Worksheets("SAVE").Visible = xlVeryHidden
-    wb.Activate
-    bk.Close
-    Application.DisplayAlerts = True
-    Application.ScreenUpdating = True
+    If timeCard.loadRoster = -1 Then GoTo 10
     sMenu.Hide
     Set lMenu = New pjSuperPkt
     lMenu.Show
-    GoTo 20
-10
+    Exit Sub
+10:
     MsgBox ("Unable to Edit Packet - The file does not exist")
-20
 End Sub
 
 Public Sub smExit_Click()
@@ -88,8 +49,8 @@ Public Sub smExit_Click()
     mMenu.Show
 End Sub
 
-Private Sub smSubmut_Click()
-    MsgBox ("This feature is not implemented yet")
+Private Sub smSubmit_Click()
+    timeCard.genTimeCard
 End Sub
 
 Private Sub UserForm_Initialize()

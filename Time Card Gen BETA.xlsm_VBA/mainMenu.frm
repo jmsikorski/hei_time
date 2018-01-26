@@ -14,6 +14,7 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 
 Private Sub ComboBox1_Change()
+    On Error Resume Next
     job = ComboBox1.Value
     Dim temp() As String
     temp = Split(job, " - ")
