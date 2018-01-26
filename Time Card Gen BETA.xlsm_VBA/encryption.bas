@@ -1,20 +1,21 @@
 Attribute VB_Name = "encryption"
 Private Function encryptPassword(pw As String) As String
-    Dim pwi() As Long
-    Dim test() As String
+    Dim pwi As Long
+    Dim test As String
     Dim epw As String
+    Dim key As Long
     epw = vbnullStrig
-    ReDim test(Len(pw))
-    ReDim pwi(Len(pw))
-    Dim x As Integer
-    x = 1
     For i = 0 To Len(pw) - 1
-        test(i) = Left(pw, 1)
-        pwi(i) = Asc(test(i))
+        test = Left(pw, 1)
+        pwi = Asc(test)
         pw = Right(pw, Len(pw) - 1)
-        pwi(i) = pwi(i) Xor ThisWorkbook.Worksheets("KEY").Range("A" & x).Value
-        If pwi(i) = 0 Then pwi(i) = 1
-        epw = epw & Chr(pwi(i))
+        key = ThisWorkbook.Worksheets("KEY").Range("A" & i + 1).Value
+        If key = pwi Then key = key + 128
+        pwi = pwi Xor key
+        If pwi = key + 128 Then
+            pwi = key
+        End If
+        epw = epw & Chr(pwi)
     Next i
     encryptPassword = epw
 End Function

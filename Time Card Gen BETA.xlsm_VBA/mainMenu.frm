@@ -12,9 +12,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
-
 Private Sub ComboBox1_Change()
-    On Error Resume Next
     job = ComboBox1.Value
     Dim temp() As String
     temp = Split(job, " - ")
@@ -59,7 +57,7 @@ Public Sub mCancel_Click()
                     logMenu.Hide
                 End If
                 If mMenu.Visible = True Then
-                    Controls("mMenu").Hide
+                    mMenu.Hide
                 End If
                 If sMenu.Visible = True Then
                     sMenu.Hide
@@ -115,7 +113,7 @@ Private Sub UserForm_Initialize()
             If uNum.Value = user Then
                 If uNum.Offset(0, cJob.Row + 2) = True Then
                     .AddItem cJob.Value
-                    .List(.ListCount - 1, 1) = cJob.Offset(0, 1).Value
+                    .list(.ListCount - 1, 1) = cJob.Offset(0, 1).Value
                 End If
             End If
         Next
@@ -128,3 +126,4 @@ Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
        mMenu.mCancel_Click
     End If
 End Sub
+

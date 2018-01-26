@@ -81,10 +81,8 @@ Public Sub open_data_file(name As String, Optional pw As String)
     xFile = xPath & "\" & name
     If pw = vbNullString Then
         Workbooks.Open xFile
-        SetAttr xFile, vbNormal
     Else
         Workbooks.Open xFile, Password:=pw
-        SetAttr xFile, vbNormal
     End If
     Exit Sub
 share_err:
@@ -92,10 +90,8 @@ share_err:
     xFile = xPath & "\" & name
     If pw = vbNullString Then
         Workbooks.Open xFile
-        SetAttr xFile, vbNormal
     Else
         Workbooks.Open xFile, Password:=pw
-        SetAttr xFile, vbNormal
     End If
 End Sub
 
@@ -106,14 +102,10 @@ Public Function Getlnkpath(ByVal Lnk As String) As String
        .Close
    End With
 End Function
-
 Public Sub genLeadSheets()
-    open_data_file "Labor Report.xlsx"
-    open_data_file "Lead Card - Office.xlsm"
     Application.ScreenUpdating = False
     Application.DisplayAlerts = False
-    Dim temp_wb As Workbook
-    Set temp_wb = Workbooks("Lead Card - Office.xlsm")
+    Application.EnableEvents = False
     Dim bks As Collection
     Set bks = New Collection
     Dim done As Boolean
@@ -153,16 +145,13 @@ Public Sub genLeadSheets()
         Dim ls As Workbook
         lsPath = iTemp.getLName & "_Week_" & we & ".xlsx"
         lsPath = xlPath + lsPath
-        Set ls = Workbooks.Add
-        For wb_sht = 1 To temp_wb.Worksheets.count
-            temp_wb.Worksheets(wb_sht).Copy after:=ls.Worksheets(ls.Worksheets.count)
-        Next wb_sht
-        Application.ScreenUpdating = False
+        open_data_file "Lead Card - Office.xlsm"
+        Set ls = Workbooks("Lead Card - Office.xlsm")
+        SetAttr ls.path, vbNormal
         Application.DisplayAlerts = False
-        ls.Worksheets(1).Delete
-        ls.Worksheets("ADD NEW PHASE CODE").Protect
-        ls.Worksheets("Open Phase Codes").Protect
+        Application.EnableEvents = False
         ls.SaveAs lsPath, 51
+        Application.EnableEvents = True
         With ls.Worksheets("LEAD").Range("Monday").Cells(1, 1)
             ls.Worksheets("LEAD").Unprotect
             .Value = iTemp.getClass
@@ -199,6 +188,8 @@ Public Sub genLeadSheets()
         End If
         bk.Worksheets("SAVE").Visible = xlVeryHidden
         ls.Worksheets("ROSTER").Visible = xlVeryHidden
+        Application.DisplayAlerts = True
+        Application.ScreenUpdating = True
     Next i
     If jobPath = vbNullString Then
         MsgBox ("ERROR!")
@@ -210,11 +201,7 @@ Public Sub genLeadSheets()
         ls.Close
     Next ls
     bk.Close False
-    Workbooks("Labor Report.xlsx").Close False
-    Application.DisplayAlerts = False
-    Application.EnableEvents = False
-    Workbooks("Lead Card - Office.xlsm").Close True, Workbooks("Lead Card - Office.xlsm").path & "\Lead Card - Office.xlsm"
-    Application.EnableEvents = True
+'    wb.Worksheets("LEAD").Visible = False
     ThisWorkbook.Protect xPass
     Application.ScreenUpdating = True
     Application.DisplayAlerts = True
@@ -338,49 +325,59 @@ Private Function get_lic(url As String) As Boolean
     If winhttp.responseText = "True" Then get_lic = True
 End Function
 
+Private Sub show_key()
+    ThisWorkbook.Worksheets("KEY").Visible = True
+End Sub
+Private Sub hide_key()
+    ThisWorkbook.Worksheets("KEY").Visible = False
+End Sub
+
 Public Function publicEncryptPassword(pw As String) As String
     If InputBox("Authorization code:", "RESTRICED") <> 12292018 Then
         publicEncryptPassword = "ERROR"
         Exit Function
     End If
-    Dim pwi() As Long
-    Dim test() As String
+    Dim pwi As Long
+    Dim test As String
     Dim epw As String
+    Dim key As Long
     epw = vbnullStrig
-    ReDim test(Len(pw))
-    ReDim pwi(Len(pw))
-    Dim x As Integer
-    x = 1
     For i = 0 To Len(pw) - 1
-        test(i) = Left(pw, 1)
-        pwi(i) = Asc(test(i))
+        test = Left(pw, 1)
+        pwi = Asc(test)
         pw = Right(pw, Len(pw) - 1)
-        pwi(i) = pwi(i) Xor ThisWorkbook.Worksheets("KEY").Range("A" & x).Value
-        If pwi(i) = 0 Then pwi(i) = 1
-        epw = epw & Chr(pwi(i))
+        key = ThisWorkbook.Worksheets("KEY").Range("A" & i + 1).Value
+        If key = pwi Then key = key + 128
+        pwi = pwi Xor key
+        If pwi = key + 128 Then
+            pwi = key
+        End If
+        epw = epw & Chr(pwi)
     Next i
     publicEncryptPassword = epw
 End Function
 
 Private Function encryptPassword(pw As String) As String
-    Dim pwi() As Long
-    Dim test() As String
+    Dim pwi As Long
+    Dim test As String
     Dim epw As String
+    Dim key As Long
     epw = vbnullStrig
-    ReDim test(Len(pw))
-    ReDim pwi(Len(pw))
-    Dim x As Integer
-    x = 1
     For i = 0 To Len(pw) - 1
-        test(i) = Left(pw, 1)
-        pwi(i) = Asc(test(i))
+        test = Left(pw, 1)
+        pwi = Asc(test)
         pw = Right(pw, Len(pw) - 1)
-        pwi(i) = pwi(i) Xor ThisWorkbook.Worksheets("KEY").Range("A" & x).Value
-        If pwi(i) = 0 Then pwi(i) = 1
-        epw = epw & Chr(pwi(i))
+        key = ThisWorkbook.Worksheets("KEY").Range("A" & i + 1).Value
+        If key = pwi Then key = key + 128
+        pwi = pwi Xor key
+        If pwi = key + 128 Then
+            pwi = key
+        End If
+        epw = epw & Chr(pwi)
     Next i
     encryptPassword = epw
 End Function
+
 
 Private Function file_auth() As Integer
     Dim rg As Range
@@ -471,9 +468,7 @@ Public Function saveWeekRoster(ByRef ws As Worksheet) As Integer
         For i = 0 To UBound(weekRoster)
             done = False
             Do While done = False
-                If x > UBound(weekRoster, 2) Then
-                    done = True
-                ElseIf weekRoster(i, x) Is Nothing Then
+                If weekRoster(i, x) Is Nothing Then
                     done = True
                 Else
                     .Offset(cnt, 0).Value = i
@@ -497,8 +492,6 @@ End Function
 Public Sub savePacket()
     Dim time As Date
     On Error Resume Next
-    Dim app As Application
-    Set app = New Excel.Application
     Application.ScreenUpdating = False
     Application.DisplayAlerts = False
     Dim bk As Workbook
@@ -515,6 +508,7 @@ Public Sub savePacket()
     On Error GoTo 0
     xlFile = xlPath & jobNum & "_Week_" & we & ".xlsx"
     open_data_file "Packet Template.xlsx"
+    Stop
     Set bk = Workbooks("Packet Template.xlsx")
     saveWeekRoster bk.Sheets("SAVE")
     If genRoster(bk, bk.Worksheets("ROSTER")) = -1 Then
@@ -784,58 +778,6 @@ Public Sub insertRoster(index As Integer)
     Next x
 End Sub
 
-Public Sub genTimeCard()
-    If loadRoster = -1 Then GoTo load_err
-    MsgBox "Success!"
-    Exit Sub
-load_err:
-    MsgBox "No Packet Found!"
-    
-End Sub
-
-Public Function loadRoster() As Integer
-    Dim we As String
-    we = Format(week, "mm.dd.yy")
-    Dim wb As Workbook
-    Set wb = ThisWorkbook
-    Dim bk As Workbook
-    Dim xlFile As String
-    Dim aVal As Integer
-    Dim bVal As Integer
-    Dim i As Integer
-    Dim tmp As Range
-    i = 0
-    xlFile = jobPath & "\" & jobNum & "\TimePackets\Week_" & we & "\" & jobNum & "_Week_" & we & ".xlsx"
-    On Error GoTo 10
-    Application.Workbooks.Open xlFile
-    SetAttr xlFile, vbNormal
-    On Error GoTo 0
-    Set bk = Workbooks(jobNum & "_Week_" & we & ".xlsx")
-    bk.Worksheets("SAVE").Visible = xlSheetVisible
-    For Each tmp In bk.Worksheets("Save").Range("A1", bk.Worksheets("SAVE").Range("A1").End(xlDown))
-        If tmp.Value > aVal Then aVal = tmp.Value
-        If tmp.Offset(0, 1).Value > bVal Then bVal = tmp.Offset(0, 1).Value
-    Next tmp
-    ReDim weekRoster(aVal, eCount)
-    For Each tmp In bk.Worksheets("Save").Range("A1", bk.Worksheets("SAVE").Range("A1").End(xlDown))
-        Dim xlEmp As Employee
-        Set xlEmp = New Employee
-        xlEmp.emClass = tmp.Offset(0, 2)
-        xlEmp.elName = tmp.Offset(0, 3)
-        xlEmp.efName = tmp.Offset(0, 4)
-        xlEmp.emnum = tmp.Offset(0, 5)
-        xlEmp.emPerDiem = tmp.Offset(0, 6)
-       Set weekRoster(tmp.Offset(0, 0).Value, tmp.Offset(0, 1).Value) = xlEmp
-    Next tmp
-    bk.Worksheets("SAVE").Visible = False
-    wb.Activate
-    bk.Close False
-    loadRoster = 1
-    Exit Function
-10:
-    loadRoster = -1
-End Function
-
 Private Sub loadMenu() 'ws As Worksheet)
     Dim ws As Worksheet
     Dim wb As Workbook
@@ -885,4 +827,3 @@ Attribute testPacket.VB_ProcData.VB_Invoke_Func = "r\n14"
     savePacket
     MsgBox ("Complete")
 End Sub
-
