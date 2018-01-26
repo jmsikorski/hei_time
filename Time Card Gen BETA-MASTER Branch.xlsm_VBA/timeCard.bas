@@ -16,8 +16,8 @@ Public mMenu As mainMenu
 Public sMenu As pjSuperMenu
 Public lMenu As pjSuperPkt
 Public tReview As teamReview
-Public Const eCount = 15
-Public xPass As String
+Public eCount As Integer
+Private Const xPass = "Dea504!!"
 
 Public Enum mType
     mainMenu = 1
@@ -81,8 +81,10 @@ Public Sub open_data_file(name As String, Optional pw As String)
     xFile = xPath & "\" & name
     If pw = vbNullString Then
         Workbooks.Open xFile
+        SetAttr xFile, vbNormal
     Else
         Workbooks.Open xFile, Password:=pw
+        SetAttr xFile, vbNormal
     End If
     Exit Sub
 share_err:
@@ -90,8 +92,10 @@ share_err:
     xFile = xPath & "\" & name
     If pw = vbNullString Then
         Workbooks.Open xFile
+        SetAttr xFile, vbNormal
     Else
         Workbooks.Open xFile, Password:=pw
+        SetAttr xFile, vbNormal
     End If
 End Sub
 
@@ -103,113 +107,13 @@ Public Function Getlnkpath(ByVal Lnk As String) As String
    End With
 End Function
 
-Private Function getLeadSheets(xStrPath As String) As String
-'UpdateByExtendoffice20160623
-    Dim xFile As String
-    On Error Resume Next
-    If xStrPath = "" Then
-        getLeadSheets = "-1"
-        Exit Function
-    End If
-    xFile = Dir(xStrPath & "\*.xlsx")
-    Do While xFile <> ""
-        getLeadSheets = getLeadSheets & xFile & ","
-        xFile = Dir
-    Loop
-    getLeadSheets = Left(getLeadSheets, Len(getLeadSheets) - 1)
-
-End Function
-
-Public Function loadShifts(Optional test As Boolean) As Integer
-    On Error GoTo shift_err
-    Dim wb_arr() As String
-    Dim lead_arr As String
-    Dim xlPath As String
-    Dim hiddenApp As New Excel.Application
-    hiddenApp.Visible = True
-    If test Then
-        jobNum = "461705"
-        week = calcWeek(Date)
-        we = Format(week, "mm.dd.yy")
-    End If
-    xlPath = timeCard.Getlnkpath(ThisWorkbook.path & "\Data.lnk") & "\" & jobNum & "\Week_" & we & "\TimeSheets\"
-    lead_arr = getLeadSheets(xlPath)
-    wb_arr = Split(lead_arr, ",")
-    For i = 0 To UBound(wb_arr)
-        xlFile = xlPath & wb_arr(i)
-        hiddenApp.Workbooks.Open xlFile
-    Next
-    Dim n As Integer
-    Dim rng As Range
-    Dim tRng As Range
-    n = 0
-    For l = 0 To UBound(weekRoster)
-        For e = 0 To UBound(weekRoster, 2)
-            n = 0
-            If weekRoster(l, e) Is Nothing Then
-                Exit For
-            End If
-            Do While Left(wb_arr(n), Len(wb_arr(n)) - 19) <> weekRoster(l, 0).getLName
-                n = n + 1
-            Loop
-            Set rng = hiddenApp.Workbooks(wb_arr(n)).Worksheets("DATA").Range("D1", hiddenApp.Workbooks(wb_arr(n)).Worksheets("DATA").Range("D1").End(xlDown))
-            For Each tRng In rng
-                If tRng.Value = weekRoster(l, e).getNum Then
-                    Dim shft As shift
-                    Set shft = New shift
-                    shft.setDay = tRng.Offset(0, -3)
-                    shft.setHrs = tRng.Offset(0, 1)
-                    shft.setPhase = Val(Left(tRng.Offset(0, 2), 5))
-                    weekRoster(l, e).addShift shft
-                End If
-            Next tRng
-            Dim tshft As Collection
-            Set tshft = weekRoster(l, e).getShifts
-            For i = 0 To tshft.count
-                Debug.Print tshft(i).getDay
-                Debug.Print tshft(i).getPhase
-                Debug.Print tshft(i).getHrs
-            Next
-            Stop
-        Next e
-        n = 0
-    Next l
-    For wb = 0 To UBound(wb_arr)
-        hiddenApp.Workbooks(wb_arr(wb)).Close False
-    Next
-    Set hiddenApp = Nothing
-    loadShifts = 1
-    Exit Function
-shift_err:
-    loadShifts = -1
-    For wb = 0 To UBound(wb_arr)
-        hiddenApp.Workbooks(wb_arr(wb)).Close False
-    Next
-    Set hiddenApp = Nothing
-    
-End Function
-
-Public Sub test_gen()
-    timeCard.genTimeCard True
-End Sub
-Sub showsave()
-    Dim ws As Worksheet
-    On Error Resume Next
-    Set ws = ActiveWorkbook.Worksheets("SAVE")
-    ws.Visible = True
-    Set ws = ActiveWorkbook.Worksheets("DATA")
-    ws.Visible = True
-    Set ws = ActiveWorkbook.Worksheets("ROSTER")
-    ws.Visible = True
-    Stop
-    ws.Visible = False
-
-
-End Sub
 Public Sub genLeadSheets()
+    open_data_file "Labor Report.xlsx"
+    open_data_file "Lead Card - Office.xlsm"
     Application.ScreenUpdating = False
     Application.DisplayAlerts = False
-    Application.EnableEvents = False
+    Dim temp_wb As Workbook
+    Set temp_wb = Workbooks("Lead Card - Office.xlsm")
     Dim bks As Collection
     Set bks = New Collection
     Dim done As Boolean
@@ -221,7 +125,7 @@ Public Sub genLeadSheets()
     Dim xlPath As String
     Dim we As String
     we = Format(week, "mm.dd.yy")
-    xlPath = jobPath & "\" & jobNum & "\Week_" & we & "\TimeSheets\"
+    xlPath = jobPath & "\" & jobNum & "\TimeSheets\" & "Week_" & we & "\"
     On Error Resume Next
     new_path = Split(xlPath, "\")
     Dim i As Integer
@@ -249,13 +153,16 @@ Public Sub genLeadSheets()
         Dim ls As Workbook
         lsPath = iTemp.getLName & "_Week_" & we & ".xlsx"
         lsPath = xlPath + lsPath
-        open_data_file "Lead Card - Office.xlsm"
-        Set ls = Workbooks("Lead Card - Office.xlsm")
-        SetAttr ls.path, vbNormal
+        Set ls = Workbooks.Add
+        For wb_sht = 1 To temp_wb.Worksheets.count
+            temp_wb.Worksheets(wb_sht).Copy after:=ls.Worksheets(ls.Worksheets.count)
+        Next wb_sht
+        Application.ScreenUpdating = False
         Application.DisplayAlerts = False
-        Application.EnableEvents = False
+        ls.Worksheets(1).Delete
+        ls.Worksheets("ADD NEW PHASE CODE").Protect
+        ls.Worksheets("Open Phase Codes").Protect
         ls.SaveAs lsPath, 51
-        Application.EnableEvents = True
         With ls.Worksheets("LEAD").Range("Monday").Cells(1, 1)
             ls.Worksheets("LEAD").Unprotect
             .Value = iTemp.getClass
@@ -292,9 +199,6 @@ Public Sub genLeadSheets()
         End If
         bk.Worksheets("SAVE").Visible = xlVeryHidden
         ls.Worksheets("ROSTER").Visible = xlVeryHidden
-        ls.Worksheets("DATA").Visible = xlVeryHidden
-        Application.DisplayAlerts = True
-        Application.ScreenUpdating = True
     Next i
     If jobPath = vbNullString Then
         MsgBox ("ERROR!")
@@ -306,7 +210,11 @@ Public Sub genLeadSheets()
         ls.Close
     Next ls
     bk.Close False
-'    wb.Worksheets("LEAD").Visible = False
+    Workbooks("Labor Report.xlsx").Close False
+    Application.DisplayAlerts = False
+    Application.EnableEvents = False
+    Workbooks("Lead Card - Office.xlsm").Close True, Workbooks("Lead Card - Office.xlsm").path & "\Lead Card - Office.xlsm"
+    Application.EnableEvents = True
     ThisWorkbook.Protect xPass
     Application.ScreenUpdating = True
     Application.DisplayAlerts = True
@@ -331,13 +239,13 @@ Attribute showBooks.VB_ProcData.VB_Invoke_Func = "S\n14"
 End Sub
 
 Public Sub openBook()
-    xPass = encryptPassword("A~™þ»›Ûæ")
-    ThisWorkbook.Unprotect xPass
+    ThisWorkbook.Unprotect "Dea504!!"
     For i = 1 To ThisWorkbook.Sheets.count
         If Worksheets(i).name <> "HOME" Then
             Worksheets(i).Visible = xlVeryHidden
         End If
     Next i
+    eCount = 15
     ReDim menuList(0)
     ReDim empRoster(0, 0)
     ReDim leadRoster(0, 0)
@@ -403,7 +311,7 @@ auth_retry:
     Set lst = ThisWorkbook.Worksheets("ROSTER").UsedRange
     lst.name = "empList"
     Set mMenu = New mainMenu
-    ThisWorkbook.Protect xPass, True, False
+    ThisWorkbook.Protect "Dea504!!", True, False
     If user <> "jsikorski" Then
         mMenu.Show
     ElseIf ld = True Then
@@ -438,11 +346,9 @@ Private Sub hide_key()
 End Sub
 
 Public Function publicEncryptPassword(pw As String) As String
-    If Environ$("username") <> "jsikorski" Then
-        If InputBox("Authorization code:", "RESTRICED") <> 12292018 Then
-            publicEncryptPassword = "ERROR"
-            Exit Function
-        End If
+    If InputBox("Authorization code:", "RESTRICED") <> 12292018 Then
+        publicEncryptPassword = "ERROR"
+        Exit Function
     End If
     Dim pwi As Long
     Dim test As String
@@ -569,13 +475,15 @@ Public Function saveWeekRoster(ByRef ws As Worksheet) As Integer
     cnt = 0
     x = 0
     Dim done As Boolean
-    Dim tEmp As Employee
-    Set tEmp = New Employee
+    Dim temp As Employee
+    Set temp = New Employee
     With ws.Range("A1")
         For i = 0 To UBound(weekRoster)
             done = False
             Do While done = False
-                If weekRoster(i, x) Is Nothing Then
+                If x > UBound(weekRoster, 2) Then
+                    done = True
+                ElseIf weekRoster(i, x) Is Nothing Then
                     done = True
                 Else
                     .Offset(cnt, 0).Value = i
@@ -599,6 +507,8 @@ End Function
 Public Sub savePacket()
     Dim time As Date
     On Error Resume Next
+    Dim app As Application
+    Set app = New Excel.Application
     Application.ScreenUpdating = False
     Application.DisplayAlerts = False
     Dim bk As Workbook
@@ -608,9 +518,9 @@ Public Sub savePacket()
     Dim xlFile As String
     Dim we As String
     we = Format(week, "mm.dd.yy")
-    xlPath = jobPath & "\" & jobNum & "\Week_" & we
+    xlPath = jobPath & "\" & jobNum & "\TimePackets\"
     MkDir xlPath
-    xlPath = xlPath & "\TimePackets\"
+    xlPath = xlPath & "Week_" & we & "\"
     MkDir xlPath
     On Error GoTo 0
     xlFile = xlPath & jobNum & "_Week_" & we & ".xlsx"
@@ -691,8 +601,8 @@ Public Function genRoster(ByRef wb As Workbook, ByRef ws As Worksheet, Optional 
                     Exit For
                 End If
             Next tmp
-'            .Range("emp").Borders(xlEdgeTop).LineStyle = xlContinuous
-'            .Range("emp").Borders(xlEdgeTop).Weight = xlThick
+            .Range("emp").Borders(xlEdgeTop).LineStyle = xlContinuous
+            .Range("emp").Borders(xlEdgeTop).Weight = xlThick
         End With
     End If
     Application.DisplayAlerts = True
@@ -784,14 +694,14 @@ Public Sub testCNR()
     changeNamedRange wb, "week_ending"
 End Sub
 Public Sub printRoster()
-    Dim tEmp As Employee
+    Dim temp As Employee
     For i = 0 To UBound(weekRoster)
         For x = 0 To UBound(weekRoster, 2)
             If weekRoster(i, x) Is Nothing Then
             Else
-                Set tEmp = weekRoster(i, x)
+                Set temp = weekRoster(i, x)
                 MsgBox ("LD: " & i & vbNewLine & "EMP: " & x & _
-                vbNewLine & tEmp.getFName & " " & tEmp.getLName)
+                vbNewLine & temp.getFName & " " & temp.getLName)
             End If
         Next x
     Next i
@@ -805,7 +715,7 @@ Public Function isSave() As Integer
     Dim we As String
     Dim tmp() As String
     we = Format(week, "mm.dd.yy")
-    xlFile = jobPath & "\" & jobNum & "\Week_" & we & "\TimePackets\" & jobNum & "_Week_" & we & ".xlsx"
+    xlFile = jobPath & "\" & jobNum & "\TimePackets\Week_" & we & "\" & jobNum & "_Week_" & we & ".xlsx"
     If testFileExist(xlFile) > 0 Then
         isSave = 1
     Else
@@ -832,14 +742,14 @@ Public Sub resizeRoster(l As Integer, e As Integer)
     
     Dim newRoster() As Employee
     ReDim newRoster(l, e)
-    Dim tEmp As Employee
+    Dim temp As Employee
     For i = 0 To l
         For x = 0 To e
             On Error Resume Next
-            Set tEmp = weekRoster(i, x)
+            Set temp = weekRoster(i, x)
 '            If temp Is Nothing Then
 '            Else
-                Set newRoster(i, x) = tEmp
+                Set newRoster(i, x) = temp
 '            End If
         Next x
     Next i
@@ -884,72 +794,13 @@ Public Sub insertRoster(index As Integer)
     Next x
 End Sub
 
-Public Sub genTimeCard(Optional test As Boolean)
-    If test Then
-        jobNum = "461705"
-        week = calcWeek(Date)
-        we = Format(week, "mm.dd.yy")
-        jobPath = ThisWorkbook.path & "\" & "Data.lnk"
-        jobPath = Getlnkpath(jobPath)
-    End If
+Public Sub genTimeCard()
     If loadRoster = -1 Then GoTo load_err
-    If timeCard.loadShifts(test) = -1 Then
-        Stop
-    End If
-    Set wb_tc = Workbooks.Add
-    Dim cnt As Integer
-    cnt = 1
-    Stop
-    Dim tEmp As Variant
-    For Each tEmp In weekRoster
-        ThisWorkbook.Worksheets("MASTER TC").Copy after:=wb_tc.Worksheets(1)
-        With wb_tc.Worksheets("MASTER TC")
-            .name = "TAG " & cnt
-            .Range("e_name") = tEmp.getFullname
-            .Range("e_num") = tEmp.getNum
-            .Range("we_date") = calcWeek(Date)
-            .Range("job_desc") = jobNum & " - " & jobName
-            Dim tshft As Variant
-            For Each tshft In tEmp.getShifts
-                Stop
-                Debug.Print tshft.getDay
-                Debug.Print tshft.getPhase
-                Debug.Print tshft.getHrs
-                Dim i As Integer
-                i = 0
-rep_add:
-                
-                If .Range("COST_CODE").Offset(i, 0) = vbNullString Then
-                    .Range("COST_CODE").Offset(i, 0) = tshft.getPhase
-                    .Range("COST_CODE").Offset(i, tshft.getDay + 2) = tshft.getHrs
-                ElseIf .Range("COST_CODE").Offset(i, 0) = tshft.getPhase Then
-                    .Range("COST_CODE").Offset(i, tshft.getDay + 2) = tshft.getHrs
-                Else
-                    i = i + 1
-                    GoTo rep_add
-                End If
-            Next
-            Stop
-        End With
-        cnt = cnt + 1
-    Next
-    Stop
+    MsgBox "Success!"
     Exit Sub
 load_err:
     MsgBox "No Packet Found!"
     
-End Sub
-
-Public Sub showHiddenBooks()
-    Dim oXLApp As Object
-
-    '~~> Get an existing instance of an EXCEL application object
-    On Error Resume Next
-    Set oXLApp = GetObject(, "Excel.Application")
-    On Error GoTo 0
-    oXLApp.Visible = True
-
-    Set oXLApp = Nothing
 End Sub
 
 Public Function loadRoster() As Integer
@@ -963,15 +814,13 @@ Public Function loadRoster() As Integer
     Dim bVal As Integer
     Dim i As Integer
     Dim tmp As Range
-    ReDim weekRoster(0, eCount)
-    Dim hiddenApp As New Excel.Application
     i = 0
-    xlFile = jobPath & "\" & jobNum & "\Week_" & we & "\TimePackets\" & jobNum & "_Week_" & we & ".xlsx"
-'    On Error GoTo 10
-    hiddenApp.Workbooks.Open xlFile
+    xlFile = jobPath & "\" & jobNum & "\TimePackets\Week_" & we & "\" & jobNum & "_Week_" & we & ".xlsx"
+    On Error GoTo 10
+    Application.Workbooks.Open xlFile
     SetAttr xlFile, vbNormal
     On Error GoTo 0
-    Set bk = hiddenApp.Workbooks(jobNum & "_Week_" & we & ".xlsx")
+    Set bk = Workbooks(jobNum & "_Week_" & we & ".xlsx")
     bk.Worksheets("SAVE").Visible = xlSheetVisible
     For Each tmp In bk.Worksheets("Save").Range("A1", bk.Worksheets("SAVE").Range("A1").End(xlDown))
         If tmp.Value > aVal Then aVal = tmp.Value
@@ -991,18 +840,10 @@ Public Function loadRoster() As Integer
     bk.Worksheets("SAVE").Visible = False
     wb.Activate
     bk.Close False
-    Set hiddenApp = Nothing
     loadRoster = 1
     Exit Function
 10:
     loadRoster = -1
-    hiddenApp.Visible = True
-    Stop
-    On Error Resume Next
-    For i = 1 To hiddenApp.Workbooks.count
-        hiddenApp.Workbooks(i).Close False
-    Next
-    Set hiddenApp = Nothing
 End Function
 
 Private Sub loadMenu() 'ws As Worksheet)
@@ -1054,3 +895,4 @@ Attribute testPacket.VB_ProcData.VB_Invoke_Func = "r\n14"
     savePacket
     MsgBox ("Complete")
 End Sub
+

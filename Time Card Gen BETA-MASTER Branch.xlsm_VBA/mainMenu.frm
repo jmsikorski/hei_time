@@ -12,12 +12,14 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+
 Private Sub ComboBox1_Change()
+    On Error Resume Next
     job = ComboBox1.Value
-    Dim tEmp() As String
-    tEmp = Split(job, " - ")
-    jobNum = tEmp(0)
-    jobName = tEmp(1)
+    Dim temp() As String
+    temp = Split(job, " - ")
+    jobNum = temp(0)
+    jobName = temp(1)
     jobPath = ThisWorkbook.path & "\" & "Data.lnk"
     jobPath = Getlnkpath(jobPath)
 End Sub
@@ -126,4 +128,3 @@ Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
        mMenu.mCancel_Click
     End If
 End Sub
-

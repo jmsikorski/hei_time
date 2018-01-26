@@ -134,8 +134,12 @@ Private Sub spDone_Click()
     For i = 0 To UBound(menuList) - 1
         Unload menuList(i)
     Next i
+    Application.WindowState = xlMinimized
+    Application.Visible = False
     savePacket
     genLeadSheets
+    Application.Visible = True
+    Application.WindowState = xlMaximized
     mMenu.Show
     Application.DisplayAlerts = True
     Application.ScreenUpdating = True
@@ -185,21 +189,21 @@ Public Sub setSheet(menuNum As Integer)
     For i = 0 To cnt - 1
 50
         Dim tBox As Control
-        Dim tEmp
-        Set tEmp = New Employee
-        leg = tEmp.newEmployee(i)
+        Dim temp
+        Set temp = New Employee
+        leg = temp.newEmployee(i)
     
         For p = 0 To UBound(weekRoster)
             If weekRoster(p, 0) Is Nothing Then
             Else
-                If tEmp.getNum = weekRoster(p, 0).getNum Then
+                If temp.getNum = weekRoster(p, 0).getNum Then
                     i = i + 1
                     GoTo 50
                 End If
             End If
         Next p
     
-        eName = tEmp.getFullname
+        eName = temp.getFullname
         If maxLen < Len(eName) Then
             maxLen = Len(eName)
         End If
@@ -213,7 +217,7 @@ Public Sub setSheet(menuNum As Integer)
             eBoxCol = eBoxCol + 1
             eBoxIndex = 1
         End If
-        Set empRoster(eBoxCol - 1, eBoxIndex - 1) = tEmp
+        Set empRoster(eBoxCol - 1, eBoxIndex - 1) = temp
         Set tBox = Me.Controls.Item("empList" & eBoxCol)
         tBox.AddItem eName
         If isSave > 0 Then
@@ -223,7 +227,7 @@ Public Sub setSheet(menuNum As Integer)
                     Set tempEmp = weekRoster(menuNum, te)
                     If tempEmp Is Nothing Then
                     Else
-                        If tEmp.getNum = tempEmp.getNum Then
+                        If temp.getNum = tempEmp.getNum Then
                             tBox.Selected(tBox.ListCount - 1) = True
                         End If
                     End If
@@ -264,7 +268,7 @@ Public Sub setSheet(menuNum As Integer)
     Next i
     Exit Sub
 10
-    tEmp.emnum = -1
+    temp.emnum = -1
     Resume Next
 20
 End Sub

@@ -172,10 +172,10 @@ Private Sub UserForm_Initialize()
     For i = 0 To cnt
         Dim tBox As Control
         If ws.Range("G" & i + 2).Value = "YES" Then
-            Dim tEmp As Employee
-            Set tEmp = New Employee
-            leg = tEmp.newEmployee(i)
-            name = tEmp.getFName & " " & tEmp.getLName
+            Dim temp As Employee
+            Set temp = New Employee
+            leg = temp.newEmployee(i)
+            name = temp.getFName & " " & temp.getLName
             If maxLen < Len(name) Then
                 maxLen = Len(name)
             End If
@@ -196,12 +196,12 @@ Private Sub UserForm_Initialize()
                 Set tempLead = weekRoster(tl, 0)
                 If tempLead Is Nothing Then
                 Else
-                    If tEmp.getNum = tempLead.getNum Then
+                    If temp.getNum = tempLead.getNum Then
                         tBox.Selected(tBox.ListCount - 1) = True
                     End If
                 End If
             Next tl
-            Set leadRoster(eBoxCol - 1, eBoxIndex - 1) = tEmp
+            Set leadRoster(eBoxCol - 1, eBoxIndex - 1) = temp
         End If
     Next i
     wide = maxLen * 10
@@ -230,7 +230,7 @@ Private Sub UserForm_Initialize()
     Next i
     GoTo 20
 10
-    tEmp.emnum = -1
+    temp.emnum = -1
     Resume Next
 20
 End Sub

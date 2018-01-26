@@ -77,11 +77,11 @@ End Sub
 
 Private Function find_user(user As String) As Integer
     Dim rng As Range
-    Dim tRng As Range
+    Dim trng As Range
     Set rng = ThisWorkbook.Worksheets("USER").Range("B1", ThisWorkbook.Worksheets("USER").Range("B1").End(xlDown))
-    For Each tRng In rng
-        If tRng.Value = user Then
-            find_user = tRng.Row
+    For Each trng In rng
+        If trng.Value = user Then
+            find_user = trng.Row
         End If
     Next
     find_user = -1
@@ -123,3 +123,4 @@ Private Function encryptPassword(pw As String) As String
     Next i
     encryptPassword = epw
 End Function
+

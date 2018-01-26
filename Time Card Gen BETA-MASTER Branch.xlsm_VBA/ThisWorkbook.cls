@@ -12,12 +12,12 @@ Private Sub Workbook_BeforeClose(Cancel As Boolean)
     Call ExportVBA
     Call export_user_sheet
     For i = 1 To ThisWorkbook.Sheets.count
-    ThisWorkbook.Unprotect xPass
+    ThisWorkbook.Unprotect "Dea504!!"
         If Worksheets(i).name <> "HOME" Then
             Worksheets(i).Visible = xlVeryHidden
         End If
     Next i
-    ThisWorkbook.Protect xPass, True, False
+    ThisWorkbook.Protect "Dea504!!", True, False
     If user = "jsikorski" Then
         Application.DisplayAlerts = False
         ThisWorkbook.SaveAs Me.path & "\" & Me.name
