@@ -126,7 +126,6 @@ Public Function loadShifts(Optional test As Boolean) As Integer
     Dim lead_arr As String
     Dim xlPath As String
     Dim hiddenApp As New Excel.Application
-    hiddenApp.Visible = True
     If test Then
         jobNum = "461705"
         week = calcWeek(Date)
@@ -163,20 +162,13 @@ Public Function loadShifts(Optional test As Boolean) As Integer
                     weekRoster(l, e).addShift shft
                 End If
             Next tRng
-            Dim tshft As Collection
-            Set tshft = weekRoster(l, e).getShifts
-            For i = 0 To tshft.count
-                Debug.Print tshft(i).getDay
-                Debug.Print tshft(i).getPhase
-                Debug.Print tshft(i).getHrs
-            Next
-            Stop
         Next e
         n = 0
     Next l
     For wb = 0 To UBound(wb_arr)
         hiddenApp.Workbooks(wb_arr(wb)).Close False
     Next
+    hiddenApp.Quit
     Set hiddenApp = Nothing
     loadShifts = 1
     Exit Function
@@ -185,6 +177,7 @@ shift_err:
     For wb = 0 To UBound(wb_arr)
         hiddenApp.Workbooks(wb_arr(wb)).Close False
     Next
+    hiddenApp.Quit
     Set hiddenApp = Nothing
     
 End Function
@@ -320,11 +313,11 @@ Attribute showBooks.VB_ProcData.VB_Invoke_Func = "S\n14"
     If user = "jsikorski" Then
         ThisWorkbook.Unprotect xPass
         For i = 1 To ThisWorkbook.Sheets.count
-            If Worksheets(i).Visible = xlVeryHidden Then
-                Worksheets(i).Visible = True
+            If ThisWorkbook.Worksheets(i).Visible = xlVeryHidden Then
+                ThisWorkbook.Worksheets(i).Visible = True
             End If
         Next i
-        Worksheets("KEY").Visible = xlVeryHidden
+        ThisWorkbook.Worksheets("KEY").Visible = xlVeryHidden
     Else
         MsgBox ("Sorry this toy is not for you to play with")
     End If
@@ -885,6 +878,9 @@ Public Sub insertRoster(index As Integer)
 End Sub
 
 Public Sub genTimeCard(Optional test As Boolean)
+    Dim hiddenApp As New Excel.Application
+    Dim xlPath As String
+    Dim xlFile As String
     If test Then
         jobNum = "461705"
         week = calcWeek(Date)
@@ -892,48 +888,59 @@ Public Sub genTimeCard(Optional test As Boolean)
         jobPath = ThisWorkbook.path & "\" & "Data.lnk"
         jobPath = Getlnkpath(jobPath)
     End If
+    xlPath = jobPath & "\" & jobNum & "\Week_" & we & "\TimePackets\"
+    xlFile = jobNum & "_Week_" & we & "_TimeCards.xlsx"
     If loadRoster = -1 Then GoTo load_err
     If timeCard.loadShifts(test) = -1 Then
         Stop
     End If
-    Set wb_tc = Workbooks.Add
+    Stop
+    hiddenApp.Visible = True
+    hiddenApp.Workbooks.Open jobPath & "\Master TC.xlsx", False
+    Set wb_tc = hiddenApp.Workbooks("Master TC.xlsx")
     Dim cnt As Integer
     cnt = 1
-    Stop
     Dim tEmp As Variant
+    ThisWorkbook.Unprotect xPass
     For Each tEmp In weekRoster
-        ThisWorkbook.Worksheets("MASTER TC").Copy after:=wb_tc.Worksheets(1)
-        With wb_tc.Worksheets("MASTER TC")
-            .name = "TAG " & cnt
-            .Range("e_name") = tEmp.getFullname
-            .Range("e_num") = tEmp.getNum
-            .Range("we_date") = calcWeek(Date)
-            .Range("job_desc") = jobNum & " - " & jobName
-            Dim tshft As Variant
-            For Each tshft In tEmp.getShifts
-                Stop
-                Debug.Print tshft.getDay
-                Debug.Print tshft.getPhase
-                Debug.Print tshft.getHrs
-                Dim i As Integer
-                i = 0
+        If tEmp Is Nothing Then
+            Exit For
+        Else
+            wb_tc.Worksheets(1).Copy after:=wb_tc.Worksheets(wb_tc.Sheets.count)
+            With wb_tc.Worksheets(wb_tc.Sheets.count)
+                .name = "TAG " & cnt
+                .Range("e_name") = tEmp.getFullname
+                .Range("e_num") = tEmp.getNum
+                .Range("we_date") = calcWeek(Date)
+                .Range("job_desc") = jobNum & " - " & jobName
+                Dim tshft As Variant
+                For Each tshft In tEmp.getShifts
+                    Dim i As Integer
+                    i = 0
 rep_add:
-                
-                If .Range("COST_CODE").Offset(i, 0) = vbNullString Then
-                    .Range("COST_CODE").Offset(i, 0) = tshft.getPhase
-                    .Range("COST_CODE").Offset(i, tshft.getDay + 2) = tshft.getHrs
-                ElseIf .Range("COST_CODE").Offset(i, 0) = tshft.getPhase Then
-                    .Range("COST_CODE").Offset(i, tshft.getDay + 2) = tshft.getHrs
-                Else
-                    i = i + 1
-                    GoTo rep_add
-                End If
-            Next
-            Stop
-        End With
+                    If tshft.getPhase <> 0 Then
+                        If .Range("COST_CODE").Offset(i, 0) = vbNullString Then
+                            .Range("COST_CODE").Offset(i, 0) = tshft.getPhase
+                            .Range("COST_CODE").Offset(i, tshft.getDay + 3) = tshft.getHrs
+                        ElseIf .Range("COST_CODE").Offset(i, 0) = tshft.getPhase Then
+                            .Range("COST_CODE").Offset(i, tshft.getDay + 3).Value = tshft.getHrs
+                        Else
+                            i = i + 1
+                            GoTo rep_add
+                        End If
+                    End If
+                Next
+            End With
+        End If
         cnt = cnt + 1
     Next
+    ThisWorkbook.Protect xPass
     Stop
+    hiddenApp.DisplayAlerts = False
+    wb_tc.Worksheets(1).Delete
+    wb_tc.Close True, xlPath & xlFile
+    hiddenApp.Quit
+    Set hiddenApp = Nothing
     Exit Sub
 load_err:
     MsgBox "No Packet Found!"
@@ -991,17 +998,18 @@ Public Function loadRoster() As Integer
     bk.Worksheets("SAVE").Visible = False
     wb.Activate
     bk.Close False
+    hiddenApp.Quit
     Set hiddenApp = Nothing
     loadRoster = 1
     Exit Function
 10:
     loadRoster = -1
     hiddenApp.Visible = True
-    Stop
     On Error Resume Next
     For i = 1 To hiddenApp.Workbooks.count
         hiddenApp.Workbooks(i).Close False
     Next
+    hiddenApp.Quit
     Set hiddenApp = Nothing
 End Function
 
