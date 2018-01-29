@@ -26,6 +26,87 @@ Public Enum mType
     pjSuperPktEmp = 4
 End Enum
 
+Public Sub main(Optional logout As Boolean)
+    If logout = True Then
+        Unload mMenu
+        GoTo relogin
+    End If
+    xPass = encryptPassword("A~™þ»›Ûæ")
+    ThisWorkbook.Unprotect xPass
+    For i = 1 To ThisWorkbook.Sheets.count
+        If Worksheets(i).name <> "HOME" Then
+            Worksheets(i).Visible = xlVeryHidden
+        End If
+    Next i
+    ReDim menuList(0)
+    ReDim empRoster(0, 0)
+    ReDim leadRoster(0, 0)
+    ReDim weekRoster(0, eCount)
+    Dim ld As Boolean 'True to load mainMenu false to skip
+    ld = True
+    lCnt = 1
+    i = 0
+    Dim rg As Range
+    Dim auth As Integer
+    Dim attempt As Integer
+relogin:
+    attempt = 0
+    auth = 0
+    Dim uNum As Integer
+    uNum = 2
+auth_retry:
+    auth = file_auth
+    If auth = -1 Then
+        Dim ans As Integer
+        ans = MsgBox("This program is not licensed!", vbCritical + vbAbortRetryIgnore)
+        If ans = vbIgnore Then
+            ThisWorkbook.Close False
+        ElseIf ans = vbRetry Then
+            GoTo auth_retry
+        ElseIf ans = vbAbort Then
+            If Environ$("username") = "jsikorski" Then
+                Exit Sub
+            Else
+                ThisWorkbook.Close False
+            End If
+        Else
+            ThisWorkbook.Close , False
+        End If
+    ElseIf auth = -2 Then
+        ThisWorkbook.Close
+    ElseIf auth = -3 Then
+        MsgBox "YOU ARE NOT AUTHORIZED TO VIEW THIS FILE!", vbCritical + vbOKOnly, "EXIT!"
+        ThisWorkbook.Close
+    End If
+    
+    If logout = False Then
+        For i = 1 To ThisWorkbook.Sheets.count
+            If Worksheets(i).name <> "HOME" Then
+                If Worksheets(i).name <> "KEY" Then
+                    Worksheets(i).Visible = xlHidden
+                    End If
+            End If
+        Next i
+        check_updates ThisWorkbook.Worksheets("HOME").Range("file_updated")
+        ThisWorkbook.Worksheets("HOME").Range("file_updated") = Now
+        week = calcWeek(Date)
+        Dim lst As Range
+        Set lst = ThisWorkbook.Worksheets("Jobs").UsedRange
+        lst.name = "jobList"
+        Set lst = ThisWorkbook.Worksheets("ROSTER").UsedRange
+        lst.name = "empList"
+    End If
+    jobPath = vbNullString
+    job = vbNullString
+    Set mMenu = New mainMenu
+    ThisWorkbook.Protect xPass, True, False
+    If user <> "jsikorski" Then
+        mMenu.Show
+    ElseIf ld = True Then
+        mMenu.Show
+    End If
+End Sub
+
 Public Sub addMenu(mType As Integer)
     Dim tmp As Object
     Dim added As Boolean
@@ -154,11 +235,16 @@ Public Function loadShifts(Optional test As Boolean) As Integer
             Set rng = hiddenApp.Workbooks(wb_arr(n)).Worksheets("DATA").Range("D1", hiddenApp.Workbooks(wb_arr(n)).Worksheets("DATA").Range("D1").End(xlDown))
             For Each tRng In rng
                 If tRng.Value = weekRoster(l, e).getNum Then
+                    Dim tPhase() As String
                     Dim shft As shift
                     Set shft = New shift
                     shft.setDay = tRng.Offset(0, -3)
                     shft.setHrs = tRng.Offset(0, 1)
-                    shft.setPhase = Val(Left(tRng.Offset(0, 2), 5))
+                    tPhase = Split(tRng.Offset(0, 2), " ")
+                    shft.setPhase = Val(tPhase(0))
+                    shft.setPhaseDesc = tPhase(1)
+                    shft.setUnits = tRng.Offset(0, 3)
+                    shft.setDayDesc = tRng.Offset(0, 4)
                     weekRoster(l, e).addShift shft
                 End If
             Next tRng
@@ -249,6 +335,7 @@ Public Sub genLeadSheets()
         Application.EnableEvents = False
         ls.SaveAs lsPath, 51
         Application.EnableEvents = True
+        ls.Worksheets("Labor Tracking & Goals").Range("lead_name") = iTemp.getFullname
         With ls.Worksheets("LEAD").Range("Monday").Cells(1, 1)
             ls.Worksheets("LEAD").Unprotect
             .Value = iTemp.getClass
@@ -323,87 +410,31 @@ Attribute showBooks.VB_ProcData.VB_Invoke_Func = "S\n14"
     End If
 End Sub
 
-Public Sub openBook()
-    xPass = encryptPassword("A~™þ»›Ûæ")
-    ThisWorkbook.Unprotect xPass
-    For i = 1 To ThisWorkbook.Sheets.count
-        If Worksheets(i).name <> "HOME" Then
-            Worksheets(i).Visible = xlVeryHidden
-        End If
-    Next i
-    ReDim menuList(0)
-    ReDim empRoster(0, 0)
-    ReDim leadRoster(0, 0)
-    ReDim weekRoster(0, eCount)
-    Dim ld As Boolean 'True to load mainMenu false to skip
-    ld = True
-    lCnt = 1
-    i = 0
-    Dim rg As Range
-    Dim auth As Integer
-    Dim attempt As Integer
-    attempt = 0
-    auth = 0
-    Dim uNum As Integer
-    uNum = 2
-    Debug.Print DateDiff("m", ThisWorkbook.Worksheets("USER").Range("user_updated").Value, Now())
-    If DateDiff("n", ThisWorkbook.Worksheets("USER").Range("user_updated").Value, Now()) > 0 Then
-        get_user_list
-        ThisWorkbook.Worksheets("USER").Range("user_updated").Value = Now()
+
+Private Sub check_updates(uTime As Date)
+    Dim datPath As String
+    datPath = Getlnkpath(ThisWorkbook.path & "\Data.lnk")
+    If DateDiff("s", uTime, FileDateTime(datPath & "\User.xlsx")) > 0 Then
+        user_form.get_user_list
     End If
-auth_retry:
-    auth = file_auth
-    If auth = -1 Then
-        Dim ans As Integer
-        ans = MsgBox("This program is not licensed!", vbCritical + vbAbortRetryIgnore)
-        If ans = vbIgnore Then
-            ThisWorkbook.Close False
-        ElseIf ans = vbRetry Then
-            GoTo auth_retry
-        ElseIf ans = vbAbort Then
-            If Environ$("username") = "jsikorski" Then
-                Exit Sub
-            Else
-                ThisWorkbook.Close False
-            End If
-        Else
-            ThisWorkbook.Close , False
-        End If
-    ElseIf auth = -2 Then
-        ThisWorkbook.Close
-    ElseIf auth = -3 Then
-        MsgBox "YOU ARE NOT AUTHORIZED TO VIEW THIS FILE!", vbCritical + vbOKOnly, "EXIT!"
-        ThisWorkbook.Close
+    If DateDiff("s", uTime, FileDateTime(datPath & "\Attendance Tracking.xlsx")) > 0 Then
+        emp_table.update_emp_table
+    End If
+    If DateDiff("s", uTime, FileDateTime(datPath & "\Labor Report.xlsx")) > 0 Then
+        Dim lc_wb As Workbook
+        Set hiddenApp = New Excel.Application
+        hiddenApp.DisplayAlerts = False
+        hiddenApp.Workbooks.Open Getlnkpath(ThisWorkbook.path & "\Data.lnk") & "\Lead Card - Office.xlsm"
+        Set lc_wb = hiddenApp.Workbooks("Lead Card - Office.xlsm")
+        total_pc.update_file
+        Stop
+        hiddenApp.Quit
+        Set hiddenApp = Nothing
     End If
     
-    
-    For i = 1 To ThisWorkbook.Sheets.count
-        If Worksheets(i).name <> "HOME" Then
-            If Worksheets(i).name <> "KEY" Then
-                Worksheets(i).Visible = xlHidden
-                End If
-        End If
-    Next i
-    If DateDiff("h", ThisWorkbook.Worksheets("ROSTER").Range("emp_table_updated").Value, Now()) > 1 Then
-        update_emp_table.update_emp_table
-    End If
-    week = calcWeek(Date)
-    jobPath = vbNullString
-    job = vbNullString
-    Dim lst As Range
-    Set lst = ThisWorkbook.Worksheets("Jobs").UsedRange
-    lst.name = "jobList"
-    Set lst = ThisWorkbook.Worksheets("ROSTER").UsedRange
-    lst.name = "empList"
-    Set mMenu = New mainMenu
-    ThisWorkbook.Protect xPass, True, False
-    If user <> "jsikorski" Then
-        mMenu.Show
-    ElseIf ld = True Then
-        mMenu.Show
-    End If
 End Sub
- Public Sub hideBooks()
+
+Public Sub hideBooks()
 Attribute hideBooks.VB_ProcData.VB_Invoke_Func = "H\n14"
     For i = 1 To ThisWorkbook.Sheets.count
         If Worksheets(i).name <> "HOME" Then
@@ -479,26 +510,21 @@ Private Function encryptPassword(pw As String) As String
 End Function
 
 
-Private Function file_auth() As Integer
+Public Function file_auth() As Integer
     Dim rg As Range
     Set rg = Worksheets("USER").Range("A" & 2)
-    Dim logMenu As loginMenu
     Dim pw As String
     Dim auth As Integer
-login_retry:
-    Set logMenu = New loginMenu
-    auth = 0
-    If get_lic("https://raw.githubusercontent.com/jmsikorski/hei_misc/master/Licence.txt") Then
-        user = Environ$("Username")
 '        If user = "jsikorski" Then
 '            file_auth = True
 '            Exit Function
 '        End If
-        logMenu.TextBox2.Value = user
-        logMenu.Show
-        pw = logMenu.TextBox1.Value
-        user = logMenu.TextBox2.Value
-        Unload logMenu
+login_retry:
+    auth = 0
+    If get_lic("https://raw.githubusercontent.com/jmsikorski/hei_misc/master/Licence.txt") Then
+        loginMenu.Show
+        pw = loginMenu.TextBox1.Value
+        user = loginMenu.TextBox2.Value
         Do While rg.Offset(i, 0) <> vbNullString
             If user = rg.Offset(i, 0) Then
                 If rg.Offset(i, 2) = "YES" Then
@@ -528,12 +554,11 @@ login_retry:
                 If pw_ans = vbCancel Then
                     file_auth = -3
                 End If
-                Set logMenu = New loginMenu
-                logMenu.TextBox2.Value = user
-                logMenu.Show
-                pw = logMenu.TextBox1.Value
-                user = logMenu.TextBox2.Value
-                Unload logMenu
+                loginMenu.TextBox2.Value = user
+                loginMenu.Show
+                pw = loginMenu.TextBox1.Value
+                user = loginMenu.TextBox2.Value
+                Unload loginMenu
                 Do While rg.Offset(i, 0) <> vbNullString
                     If user = rg.Offset(i, 0) Then
                         auth = 1
@@ -550,6 +575,7 @@ login_retry:
                 End If
             End If
         Loop
+        Unload loginMenu
         file_auth = 1
     Else
         file_auth = -1
@@ -894,8 +920,6 @@ Public Sub genTimeCard(Optional test As Boolean)
     If timeCard.loadShifts(test) = -1 Then
         Stop
     End If
-    Stop
-    hiddenApp.Visible = True
     hiddenApp.Workbooks.Open jobPath & "\Master TC.xlsx", False
     Set wb_tc = hiddenApp.Workbooks("Master TC.xlsx")
     Dim cnt As Integer
@@ -913,7 +937,7 @@ Public Sub genTimeCard(Optional test As Boolean)
                 .Range("e_num") = tEmp.getNum
                 .Range("we_date") = calcWeek(Date)
                 .Range("job_desc") = jobNum & " - " & jobName
-                Dim tshft As Variant
+                Dim tshft As shift
                 For Each tshft In tEmp.getShifts
                     Dim i As Integer
                     i = 0
@@ -921,6 +945,7 @@ rep_add:
                     If tshft.getPhase <> 0 Then
                         If .Range("COST_CODE").Offset(i, 0) = vbNullString Then
                             .Range("COST_CODE").Offset(i, 0) = tshft.getPhase
+                            .Range("COST_CODE").Offset(i, 2) = tshft.getPhaseDesc
                             .Range("COST_CODE").Offset(i, tshft.getDay + 3) = tshft.getHrs
                         ElseIf .Range("COST_CODE").Offset(i, 0) = tshft.getPhase Then
                             .Range("COST_CODE").Offset(i, tshft.getDay + 3).Value = tshft.getHrs
@@ -947,7 +972,7 @@ load_err:
     
 End Sub
 
-Public Sub showHiddenBooks()
+Public Sub showHiddenApps()
     Dim oXLApp As Object
 
     '~~> Get an existing instance of an EXCEL application object
@@ -1004,7 +1029,6 @@ Public Function loadRoster() As Integer
     Exit Function
 10:
     loadRoster = -1
-    hiddenApp.Visible = True
     On Error Resume Next
     For i = 1 To hiddenApp.Workbooks.count
         hiddenApp.Workbooks(i).Close False

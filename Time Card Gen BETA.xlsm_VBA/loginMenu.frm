@@ -18,8 +18,68 @@ Private Sub loginButton_Click()
     Me.Hide
 End Sub
 
-Private Sub mCancel_Click()
-    mainMenu.mCancel_Click
+Public Sub mCancel_Click()
+    Application.DisplayAlerts = False
+    Dim unLockIn As String
+    Dim ans As Integer, attempt As Integer
+    Dim correct As Boolean
+    correct = False
+    attempt = 1
+    ans = MsgBox("This file is locked" & vbNewLine & "Are you sure you want to quit?", 4147, "EXIT")
+    If ans = 6 Then
+        Application.DisplayAlerts = False
+        ThisWorkbook.Close
+    ElseIf ans = 2 Then
+        If user = "jsikorski" Then
+            On Error Resume Next
+            If loginMenu.Visible = True Then
+                loginMenu.Hide
+            End If
+            If mMenu.Visible = False Then
+                mMenu.Hide
+            End If
+            If sMenu.Visible = True Then
+                sMenu.Hide
+            End If
+            End
+        End If
+        Do While correct = False And attempt > 0
+            unLockIn = InputBox("This file is locked for editing" & vbNewLine & "Please enter the unlock password:", "UNLOCK FILE ATTEMPT " & attempt & "/3")
+            If unLockIn = "" Then
+                attempt = attempt + 1
+            ElseIf unLockIn = "jms7481" Then
+                On Error Resume Next
+                If loginMenu.Visible = True Then
+                    loginMenu.Hide
+                End If
+                If mMenu.Visible = True Then
+                    mMenu.Hide
+                End If
+                If sMenu.Visible = True Then
+                    sMenu.Hide
+                End If
+                If Application.WindowState = xlMinimized Then
+                    Application.WindowState = xlMaximized
+                End If
+                On Error GoTo 0
+                attempt = 0
+                correct = True
+            Else
+                attempt = attempt + 1
+            End If
+            If attempt = 4 Then
+                MsgBox "You have made 3 failed attempts!", 16, "FAILED UNLOCK"
+                Application.DisplayAlerts = False
+                ThisWorkbook.Close
+            End If
+        Loop
+    End If
+
+End Sub
+
+
+Private Sub pw_reset_Click()
+    MsgBox ("This feature is not implemented yet")
 End Sub
 
 Private Sub reqUser_Click()
@@ -28,18 +88,21 @@ Private Sub reqUser_Click()
 End Sub
 
 Private Sub UserForm_Initialize()
+        timeCard.user = Environ$("Username")
     With Me
         .StartUpPosition = 0
         .Left = Application.Left + (0.5 * Application.Width) - (0.5 * .Width)
         .Top = Application.Top + (0.5 * Application.Height) - (0.5 * .Height)
         .Label1.Caption = "Enter Password:"
+        .TextBox2.Value = timeCard.user
         .TextBox1.SetFocus
         .Caption = "LOGIN"
     End With
+
 End Sub
 
 Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
     If CloseMode = vbFormControlMenu Then
-        mainMenu.mCancel_Click
+        mCancel_Click
     End If
 End Sub

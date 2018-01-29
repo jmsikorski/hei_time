@@ -99,7 +99,7 @@ End Sub
 
 Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
     If CloseMode = vbFormControlMenu Then
-        mainMenu.mCancel_Click
+        loginMenu.mCancel_Click
     End If
 End Sub
 
