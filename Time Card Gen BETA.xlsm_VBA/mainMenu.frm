@@ -13,6 +13,7 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Private Sub ComboBox1_Change()
+    On Error GoTo 1
     job = ComboBox1.Value
     Dim tEmp() As String
     tEmp = Split(job, " - ")
@@ -20,6 +21,7 @@ Private Sub ComboBox1_Change()
     jobName = tEmp(1)
     jobPath = ThisWorkbook.path & "\" & "Data.lnk"
     jobPath = Getlnkpath(jobPath)
+1:
 End Sub
 
 Public Sub mCancel_Click()

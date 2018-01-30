@@ -74,7 +74,7 @@ Private Sub spDone_Click()
         MsgBox "You must Select a Lead!", vbExclamation + vbOKOnly
         Exit Sub
     End If
-    If isSave < 0 Then
+    If UBound(menuList) = 0 Then 'isSave < 0 Then
         ReDim weekRoster(lIndex - 1, eCount)
     Else
         ReDim tmpRoster(lIndex - 1, eCount)
@@ -85,7 +85,7 @@ Private Sub spDone_Click()
         For x = 0 To tlist.ListCount - 1
             If tlist.Selected(x) Then
                 leadRoster(i - 1, x).eLead = 0
-                If isSave < 0 Then
+                If UBound(menuList) = 0 Then 'isSave < 0 Then
                     Set weekRoster(lIndex, 0) = leadRoster(i - 1, x)
                 Else
                     Set tmpRoster(lIndex, 0) = leadRoster(i - 1, x)
@@ -95,29 +95,66 @@ Private Sub spDone_Click()
         Next x
     Next i
     lNum = 1
-    ReDim menuList(lIndex)
-    For i = 0 To lIndex
-        addMenu (mType.pjSuperPktEmp)
-    Next i
     Dim ldn As Integer
     ldn = 0
+    ReDim menuList(lIndex)
     
-    If isSave > 0 Then
+    If UBound(weekRoster) <> lIndex - 1 Then
+        If UBound(weekRoster) < lIndex - 1 Then
+            For i = 0 To UBound(tmpRoster)
+                If (tmpRoster(i, 0).getFullname = weekRoster(ldn, 0).getFullname) Then
+                    For x = 0 To eCount
+                        Set tmpRoster(i, x) = weekRoster(ldn, x)
+                    Next x
+                    If ldn = UBound(weekRoster) Then Exit For
+                    ldn = ldn + 1
+                End If
+            Next i
+        Else
+            For i = 0 To UBound(weekRoster)
+                If (tmpRoster(ldn, 0).getFullname = weekRoster(i, 0).getFullname) Then
+                    For x = 0 To eCount
+                        Set tmpRoster(ldn, x) = weekRoster(i, x)
+                    Next x
+                    If ldn = UBound(tmpRoster) Then Exit For
+                    ldn = ldn + 1
+                End If
+            Next i
+        End If
         resizeRoster lIndex - 1, eCount
         For i = 0 To lIndex - 1
-            If (tmpRoster(i, 0).getNum = weekRoster(ldn, 0).getNum) Then
-                For x = 0 To eCount
-                    Set weekRoster(i, x) = weekRoster(ldn, x)
-                Next x
-                ldn = ldn + 1
-            Else
-                Set weekRoster(i, 0) = tmpRoster(i, 0)
-            End If
+            For e = 0 To eCount
+                Set weekRoster(i, e) = tmpRoster(i, e)
+            Next e
+'            If ldn <> lIndex - 1 Then
+'                If weekRoster(i, 0) Is Nothing Then
+'                    For x = 0 To eCount
+'                        Set weekRoster(i, 0) = tmpRoster(i, 0)
+'                    Next x
+'                End If
+'                If (tmpRoster(i, 0).getFullname = weekRoster(ldn, 0).getFullname) Then
+'                    For x = 0 To eCount
+'                        Set weekRoster(i, x) = weekRoster(ldn, x)
+'                    Next x
+'                    ldn = ldn + 1
+'                Else
+'                    For x = 0 To eCount
+'                        Set weekRoster(i, 0) = tmpRoster(i, 0)
+'                    Next x
+'                End If
+'            Else
+'                For x = 0 To eCount
+'                    Set weekRoster(i, 0) = tmpRoster(i, 0)
+'                Next x
+'            End If
         Next i
+        resizeRoster lIndex - 1, eCount
     End If
-    
     For i = 0 To UBound(weekRoster)
-        menuList(i).setSheet (i)
+        With menuList(i)
+            addMenu (mType.pjSuperPktEmp)
+            menuList(i).setSheet (i)
+        End With
     Next i
     Me.Hide
     menuList(0).Show

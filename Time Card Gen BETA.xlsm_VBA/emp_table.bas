@@ -20,7 +20,6 @@ Public Sub update_emp_table()
     Set hiddenApp = New Excel.Application
     hiddenApp.Workbooks.Open (timeCard.Getlnkpath(ThisWorkbook.path & "\Data.lnk") & "\Attendance Tracking.xlsx")
     cnt = 1
-    Stop
     Set ws = ThisWorkbook.Worksheets("Roster")
     ws.Unprotect pw
     ws.ListObjects("emp_roster").DataBodyRange.Clear

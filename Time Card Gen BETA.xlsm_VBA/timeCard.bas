@@ -55,6 +55,7 @@ relogin:
     Dim uNum As Integer
     uNum = 2
 auth_retry:
+    user = Environ$("username")
     auth = file_auth
     If auth = -1 Then
         Dim ans As Integer
@@ -206,11 +207,13 @@ Public Function loadShifts(Optional test As Boolean) As Integer
     Dim wb_arr() As String
     Dim lead_arr As String
     Dim xlPath As String
+    Dim we As String
+    we = Format(week, "mm.dd.yy")
     Dim hiddenApp As New Excel.Application
     If test Then
         jobNum = "461705"
         week = calcWeek(Date)
-        we = Format(week, "mm.dd.yy")
+        we = "01.28.18"
     End If
     xlPath = timeCard.Getlnkpath(ThisWorkbook.path & "\Data.lnk") & "\" & jobNum & "\Week_" & we & "\TimeSheets\"
     lead_arr = getLeadSheets(xlPath)
@@ -515,10 +518,10 @@ Public Function file_auth() As Integer
     Set rg = Worksheets("USER").Range("A" & 2)
     Dim pw As String
     Dim auth As Integer
-'        If user = "jsikorski" Then
-'            file_auth = True
-'            Exit Function
-'        End If
+    If user = "jsikorski" Then
+        file_auth = 1
+        Exit Function
+    End If
 login_retry:
     auth = 0
     If get_lic("https://raw.githubusercontent.com/jmsikorski/hei_misc/master/Licence.txt") Then
@@ -848,7 +851,6 @@ Public Function testFileExist(FilePath As String) As Integer
 End Function
 
 Public Sub resizeRoster(l As Integer, e As Integer)
-    
     Dim newRoster() As Employee
     ReDim newRoster(l, e)
     Dim tEmp As Employee
@@ -867,9 +869,12 @@ Public Sub resizeRoster(l As Integer, e As Integer)
     For i = 0 To l
         For x = 0 To e
             Set weekRoster(i, x) = newRoster(i, x)
+            
+            On Error Resume Next
+            Debug.Print newRoster(i, x).getFullname
         Next x
     Next i
-    
+    On Error GoTo 0
     
 End Sub
 
@@ -907,10 +912,12 @@ Public Sub genTimeCard(Optional test As Boolean)
     Dim hiddenApp As New Excel.Application
     Dim xlPath As String
     Dim xlFile As String
+    Dim we As String
+    we = Format(week, "mm.dd.yy")
     If test Then
         jobNum = "461705"
         week = calcWeek(Date)
-        we = Format(week, "mm.dd.yy")
+        we = "01.28.18"
         jobPath = ThisWorkbook.path & "\" & "Data.lnk"
         jobPath = Getlnkpath(jobPath)
     End If

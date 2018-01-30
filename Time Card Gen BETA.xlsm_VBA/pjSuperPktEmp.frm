@@ -23,6 +23,7 @@ Private Sub nLead_Click()
     If i = UBound(menuList) Then
         MsgBox ("No more leads")
     Else
+        loadRoster i - 1
         Me.Hide
         menuList(i).Show
     End If
@@ -39,6 +40,7 @@ Private Sub pLead_Click()
     If i - 2 < 0 Then
         MsgBox ("You are at the first lead")
     Else
+        loadRoster i - 1
         Me.Hide
         menuList(i - 2).Show
     End If
@@ -65,7 +67,7 @@ Private Sub spAdd_Click()
         Next i
 '        If mSize < cnt Then mSize = cnt
 '        If mSize > 0 Then
-        resizeRoster UBound(menuList) - 1, eCount
+'        resizeRoster UBound(menuList) - 1, eCount
         lIndex = 1
         For i = 1 To lBox
             Set tlist = menuList(ld).Controls.Item("empList" & i)
@@ -82,11 +84,46 @@ Private Sub spAdd_Click()
             Next x
         Next i
     Next ld
-    savePacket
+'    savePacket
+    Me.Hide
     For i = 0 To UBound(menuList) - 1
+        loadRoster i
         Unload menuList(i)
     Next i
     lMenu.Show
+End Sub
+
+Private Sub loadRoster(ld)
+    Dim lBox As Integer
+    Dim tlist As Object
+    lBox = Me.Controls.count - 6
+    Dim tmp As Range
+    Dim lIndex As Integer, mSize As Integer, cnt As Integer
+    cnt = 0
+    For i = 1 To lBox
+        Set tlist = menuList(ld).Controls.Item("empList" & i)
+        For x = 0 To tlist.ListCount - 1
+            If tlist.Selected(x) Then
+            cnt = cnt + 1
+            End If
+        Next x
+    Next i
+'    resizeRoster UBound(menuList) - 1, eCount
+    lIndex = 1
+    For i = 1 To lBox
+        Set tlist = menuList(ld).Controls.Item("empList" & i)
+        For x = 0 To tlist.ListCount - 1
+            If tlist.Selected(x) Then
+                empRoster(i - 1, x).eLead = ld
+                Set weekRoster(ld, lIndex) = empRoster(i - 1, x)
+                lIndex = lIndex + 1
+                If lIndex > eCount Then
+                    MsgBox ("ERROR, Lead can only have " & eCount & " workers!")
+                    Exit Sub
+                End If
+            End If
+        Next x
+    Next i
 End Sub
 
 Private Sub spDone_Click()
@@ -96,42 +133,10 @@ Private Sub spDone_Click()
     Unload lMenu
     Dim ws As Worksheet
     Set ws = ThisWorkbook.Worksheets("ROSTER")
-    Dim lBox As Integer
-    Dim tlist As Object
-    lBox = Me.Controls.count - 6
-    Dim tmp As Range
-    Dim lIndex As Integer, mSize As Integer, cnt As Integer
-    cnt = 0
-'    mSize = 0
-    For ld = 0 To UBound(menuList) - 1
-        For i = 1 To lBox
-            Set tlist = menuList(ld).Controls.Item("empList" & i)
-            For x = 0 To tlist.ListCount - 1
-                If tlist.Selected(x) Then
-                cnt = cnt + 1
-                End If
-            Next x
-        Next i
-'        If mSize < cnt Then mSize = cnt
-'        If mSize > 0 Then
-        ReDim Preserve weekRoster(UBound(menuList) - 1, eCount)
-        lIndex = 1
-        For i = 1 To lBox
-            Set tlist = menuList(ld).Controls.Item("empList" & i)
-            For x = 0 To tlist.ListCount - 1
-                If tlist.Selected(x) Then
-                    empRoster(i - 1, x).eLead = ld
-                    Set weekRoster(ld, lIndex) = empRoster(i - 1, x)
-                    lIndex = lIndex + 1
-                    If lIndex > eCount Then
-                        MsgBox ("ERROR, Lead can only have " & eCount & " workers!")
-                        Exit Sub
-                    End If
-                End If
-            Next x
-        Next i
-    Next ld
+'    Stop
+'    loadRoster
     For i = 0 To UBound(menuList) - 1
+        loadRoster i
         Unload menuList(i)
     Next i
     savePacket
@@ -216,20 +221,16 @@ Public Sub setSheet(menuNum As Integer)
         Set empRoster(eBoxCol - 1, eBoxIndex - 1) = tEmp
         Set tBox = Me.Controls.Item("empList" & eBoxCol)
         tBox.AddItem eName
-        If isSave > 0 Then
-'            If menuNum >= 0 Then
-                For te = 1 To UBound(weekRoster, 2)
-                    Dim tempEmp As Employee
-                    Set tempEmp = weekRoster(menuNum, te)
-                    If tempEmp Is Nothing Then
-                    Else
-                        If tEmp.getNum = tempEmp.getNum Then
-                            tBox.Selected(tBox.ListCount - 1) = True
-                        End If
-                    End If
-                Next te
-'            End If
-        End If
+        For te = 1 To UBound(weekRoster, 2)
+            Dim tempEmp As Employee
+            Set tempEmp = weekRoster(menuNum, te)
+            If tempEmp Is Nothing Then
+            Else
+                If tEmp.getNum = tempEmp.getNum Then
+                    tBox.Selected(tBox.ListCount - 1) = True
+                End If
+            End If
+        Next te
     Next i
     wide = maxLen * 10
     With Me
