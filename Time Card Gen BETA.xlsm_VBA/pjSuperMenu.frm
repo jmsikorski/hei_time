@@ -51,6 +51,9 @@ End Sub
 
 Private Sub smSubmit_Click()
     timeCard.genTimeCard
+    MsgBox "Time Cards Complete"
+    Unload Me
+    mMenu.Show
 End Sub
 
 Private Sub UserForm_Initialize()

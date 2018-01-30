@@ -245,6 +245,9 @@ Public Function loadShifts(Optional test As Boolean) As Integer
                     shft.setHrs = tRng.Offset(0, 1)
                     tPhase = Split(tRng.Offset(0, 2), " ")
                     shft.setPhase = Val(tPhase(0))
+                    If tPhase(0) <> 0 Then
+                        shft.setPhaseDesc = tPhase(1)
+                    End If
                     shft.setPhaseDesc = tPhase(1)
                     shft.setUnits = tRng.Offset(0, 3)
                     shft.setDayDesc = tRng.Offset(0, 4)
