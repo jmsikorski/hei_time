@@ -41,14 +41,13 @@ Public Sub update_phase_code()
     Dim ws As Worksheet
     Dim cnt As Integer
     Dim lc_wb As Workbook
-    Set lc_wb = hiddenApp.Workbooks("Lead Card - Office.xlsm")
+    Set lc_wb = hiddenApp.Workbooks("Lead Card.xlsx")
     hiddenApp.Workbooks.Open lc_wb.path & "\Labor Report.xlsx"
     cnt = 1
     Set ws = lc_wb.Worksheets("Open Phase Codes")
     ws.Unprotect pw
-'    ws.Range("A2", ws.Range("A1").End(xlDown).Offset(0, 1)).Clear
-    ws.ListObjects("phase_list").DataBodyRange.Clear
-'    Set rng = ws.Range("A2")
+    ws.Range(ws.ListObjects("phase_list").DataBodyRange(1, 1), ws.ListObjects("phase_list").DataBodyRange(ws.ListObjects("phase_list").ListRows.count - 6, 2)).Delete
+    ws.Range(ws.ListObjects("phase_list").DataBodyRange(1, 1), ws.ListObjects("phase_list").DataBodyRange(1, 2)).Clear
     Set rng = ws.ListObjects("phase_list").DataBodyRange(1, 1)
     Application.ScreenUpdating = True
     new_code = 1
@@ -84,36 +83,7 @@ Public Sub update_phase_code()
         End If
     Loop
     On Error GoTo 0
-'    ws.Range(ws.Cells(rng_end + 1, 1), ws.Cells(rng_end + 1000, 2)).EntireRow.Delete
-    ws.Unprotect pw
-    Set rng = ws.Range(ws.ListObjects("phase_list").Range(1, 1), ws.ListObjects("phase_list").Range(1, 2).End(xlDown))
-    ws.ListObjects("phase_list").Resize rng
-    For i = 0 To 4
-        ws.ListObjects("phase_list").ListRows.Add
-        For p = 1 To 2
-            With ws.ListObjects("phase_list").Range(ws.ListObjects("phase_list").ListRows.count + 1, p)
-                .Borders(xlEdgeBottom).LineStyle = xlContinuous
-                .Borders(xlEdgeBottom).Weight = xlThin
-                .Borders(xlEdgeTop).LineStyle = xlContinuous
-                .Borders(xlEdgeTop).Weight = xlThin
-                .Borders(xlEdgeLeft).LineStyle = xlContinuous
-                .Borders(xlEdgeLeft).Weight = xlThin
-                .Borders(xlEdgeRight).LineStyle = xlContinuous
-                .Borders(xlEdgeRight).Weight = xlThin
-            End With
-        Next p
-    Next i
-'    Dim c1 As Interior
-'    Dim c2 As Interior
-'    Set c1 = ws.Range("A2").Interior
-'    Set c2 = ws.Range("A3").Interior
-'
-'    For i = 2 To rng_end
-'        ws.Range("A" & i, "B" & i).Interior.Color = c1.ColorIndex
-'        i = i + 1
-'        ws.Range("A" & i, "B" & i).Interior.Color = c2.ColorIndex
-'    Next i
-'    resize_name_range "open_codes", ws, ws.Range("C2"), rng.Offset(0, 2)
+    ws.ListObjects("phase_list").ListRows(ws.ListObjects("phase_list").ListRows.count - 5).Delete
     ws.Protect pw
     hiddenApp.Workbooks("Labor Report.xlsx").Close False
     Exit Sub
@@ -291,9 +261,8 @@ Private Function insert_code(code As Double, desc As String) As Integer
     Dim wb As Workbook
     Dim ws As Worksheet
     Dim rng As Range
-    Set wb = hiddenApp.Workbooks("Lead Card - Office.xlsm")
+    Set wb = hiddenApp.Workbooks("Lead Card.xlsx")
     Set ws = wb.Worksheets("Open Phase Codes")
-'    Stop
     For Each rng In ws.ListObjects("phase_list").ListColumns(1).DataBodyRange 'ws.Range("A2", ws.Range("A1").End(xlDown))
         If rng.Value = code Then
             MsgBox "Phase code already open!", vbCritical, "ERROR!"
@@ -330,6 +299,7 @@ Private Function insert_code(code As Double, desc As String) As Integer
                 .Offset(0, 2) = rng.Offset(-1, 2).Formula
                 insert_code = 1
             End With
+            ws.ListObjects("phase_list").ListRows.Add ws.ListObjects("phase_list").ListRows.count - 4
             Exit Function
         ElseIf rng.Value = vbNullString Then
             GoTo 1

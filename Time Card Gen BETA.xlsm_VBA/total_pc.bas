@@ -28,7 +28,8 @@ Attribute update_file.VB_ProcData.VB_Invoke_Func = "U\n14"
     On Error GoTo 0
     Dim phase_wb As Workbook
     Dim wb As Workbook
-    Set wb = hiddenApp.Workbooks("Lead Card - Office.xlsm")
+    Set wb = hiddenApp.Workbooks("Lead Card.xlsx")
+    
     Dim ws As Worksheet
     Dim xlFile As String
     Dim rng As Range

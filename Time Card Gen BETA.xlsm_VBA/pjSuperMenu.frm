@@ -15,15 +15,24 @@ Attribute VB_Exposed = False
 Private Sub smBuild_Click()
     Dim we As String
     Dim xlFile As String
+    Dim killFile As String
+    Dim xStrPath As String
     we = Format(week, "mm.dd.yy")
-    xlFile = jobPath & "\" & jobNum & "\TimePackets\Week_" & we & "\" & jobNum & "_Week_" & we & ".xlsx"
+    xlFile = jobPath & "\" & jobNum & "\Week_" & we & "\TimePackets\" & jobNum & "_Week_" & we & ".xlsx"
     If testFileExist(xlFile) > 0 Then
         On Error Resume Next
         Dim ans As Integer
         ans = MsgBox("The packet already exists, Are you sure you want to overwrite it?", vbYesNo + vbQuestion)
         If ans = vbYes Then
-            Kill xlFile
-            Kill jobPath & "\" & jobNum & "\TimeSheets\Week_" & we & "\*.*"
+            Stop
+            xStrPath = jobPath & "\" & jobNum & "\Week_" & we & "\TimeSheets\"
+'            Kill xlFile
+            xStrPath = jobPath & "\" & jobNum & "\Week_" & we & "\TimeSheets\"
+            killFile = Dir(xStrPath & "\*.xlsx")
+            Do While killFile <> ""
+                Kill xStrPath & killFile
+                killFile = Dir
+            Loop
         Else
             Exit Sub
         End If
@@ -51,6 +60,7 @@ End Sub
 
 Private Sub smSubmit_Click()
     timeCard.genTimeCard
+    timeCard.updatePacket
     MsgBox "Time Cards Complete"
     Unload Me
     mMenu.Show

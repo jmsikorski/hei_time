@@ -8,7 +8,7 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Private d As Double
-Private phase As Long
+Private phase As Double
 Private phase_desc As String
 Private units As Double
 Private hrs As Double
@@ -55,11 +55,11 @@ Public Property Get getUnits() As Double
     getUnits = units
 End Property
 
-Public Property Let setPhase(p As Long)
+Public Property Let setPhase(p As Double)
     phase = p
 End Property
 
-Public Property Get getPhase() As Long
+Public Property Get getPhase() As Double
     getPhase = phase
 End Property
 

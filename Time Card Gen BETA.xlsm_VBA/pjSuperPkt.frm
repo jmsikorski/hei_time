@@ -74,7 +74,7 @@ Private Sub spDone_Click()
         MsgBox "You must Select a Lead!", vbExclamation + vbOKOnly
         Exit Sub
     End If
-    If UBound(menuList) = 0 Then 'isSave < 0 Then
+    If UBound(menuList) = 0 And isSave <> 1 Then 'isSave < 0 Then
         ReDim weekRoster(lIndex - 1, eCount)
     Else
         ReDim tmpRoster(lIndex - 1, eCount)
@@ -85,7 +85,7 @@ Private Sub spDone_Click()
         For x = 0 To tlist.ListCount - 1
             If tlist.Selected(x) Then
                 leadRoster(i - 1, x).eLead = 0
-                If UBound(menuList) = 0 Then 'isSave < 0 Then
+                If UBound(menuList) = 0 And isSave <> 1 Then 'isSave < 0 Then
                     Set weekRoster(lIndex, 0) = leadRoster(i - 1, x)
                 Else
                     Set tmpRoster(lIndex, 0) = leadRoster(i - 1, x)
@@ -152,7 +152,7 @@ Private Sub spDone_Click()
     End If
     For i = 0 To UBound(weekRoster)
         With menuList(i)
-            addMenu (mType.pjSuperPktEmp)
+            addMenu (4) 'mType.pjSuperPktEmp)
             menuList(i).setSheet (i)
         End With
     Next i

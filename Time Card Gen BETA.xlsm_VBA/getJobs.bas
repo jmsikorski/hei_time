@@ -38,14 +38,14 @@ End Function
 'printList prints the Values of each item in a list in the cell
 'referenced by c column 1 row 1
 
-Sub printList(l As Collection, c As Range)
+Sub printList(l As Collection, C As Range)
     Dim actSheet As Worksheet
     Set actSheet = ActiveSheet
     Dim v As Variant
     Dim i As Integer
     i = 0
     Stop
-    With c.Cells(1, 1)
+    With C.Cells(1, 1)
         For Each v In l
             .Offset(i, 0).Value = v
             i = i + 1

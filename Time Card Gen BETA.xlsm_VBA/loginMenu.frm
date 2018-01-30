@@ -93,7 +93,6 @@ Private Sub UserForm_Initialize()
         .StartUpPosition = 0
         .Left = Application.Left + (0.5 * Application.Width) - (0.5 * .Width)
         .Top = Application.Top + (0.5 * Application.Height) - (0.5 * .Height)
-        .Label1.Caption = "Enter Password:"
         .TextBox2.Value = timeCard.user
         .TextBox1.SetFocus
         .Caption = "LOGIN"

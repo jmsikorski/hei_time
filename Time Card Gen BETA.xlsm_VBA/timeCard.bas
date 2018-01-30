@@ -18,13 +18,37 @@ Public lMenu As pjSuperPkt
 Public tReview As teamReview
 Public Const eCount = 15
 Public xPass As String
-
+Public Const holiday = "88080-08"
 Public Enum mType
     mainMenu = 1
     pjSuperMenu = 2
     pjSuperPkt = 3
     pjSuperPktEmp = 4
 End Enum
+
+Public Sub t1()
+    Dim xFile As String
+    Dim xlPath As String
+    xlPath = timeCard.Getlnkpath(ThisWorkbook.path & "\Data.lnk") & "\461705\Week_01.28.18\TimeSheets\"
+    xlFile = "Tipton_Week_01.28.18.xlsx"
+    Dim sharepointPath As String
+    sharepointPath = "https://helixelectricinc.sharepoint.com/sites/TeslaTimeCard/Time%20Card%20Files/Data/461702/Week_02.04.18/TimeSheets/Tipton_Week_01.28.18.xlsx"
+    Stop
+    Set wb = Workbooks.Open(sharepointPath)
+
+End Sub
+
+Private Function getSharePointLink(xlPath As String) As String
+    Dim spPath As String
+    Dim tmp() As String
+    xlPath = Right(xlPath, Len(xlPath) - Len(Getlnkpath(ThisWorkbook.path & "\Data.lnk")))
+    spPath = "https://helixelectricinc.sharepoint.com/sites/TeslaTimeCard/Shared Documents/Time Card Files/Data/"
+    tmp = Split(xlPath, "\")
+    For i = 1 To UBound(tmp) - 1
+        spPath = spPath & tmp(i) & "/"
+    Next i
+    getSharePointLink = spPath
+End Function
 
 Public Sub main(Optional logout As Boolean)
     If logout = True Then
@@ -108,6 +132,17 @@ auth_retry:
     End If
 End Sub
 
+Sub BreakLinks()
+'Updateby20140318
+Dim wb As Workbook
+Set wb = Application.ActiveWorkbook
+If Not IsEmpty(wb.LinkSources(xlExcelLinks)) Then
+    For Each link In wb.LinkSources(xlExcelLinks)
+        wb.BreakLink link, xlLinkTypeExcelLinks
+    Next link
+End If
+End Sub
+
 Public Sub addMenu(mType As Integer)
     Dim tmp As Object
     Dim added As Boolean
@@ -177,9 +212,9 @@ share_err:
     End If
 End Sub
 
-Public Function Getlnkpath(ByVal Lnk As String) As String
+Public Function Getlnkpath(ByVal lnk As String) As String
    On Error Resume Next
-   With CreateObject("Wscript.Shell").CreateShortcut(Lnk)
+   With CreateObject("Wscript.Shell").CreateShortcut(lnk)
        Getlnkpath = .TargetPath
        .Close
    End With
@@ -208,13 +243,12 @@ Public Function loadShifts(Optional test As Boolean) As Integer
     Dim lead_arr As String
     Dim xlPath As String
     Dim we As String
-    we = Format(week, "mm.dd.yy")
     Dim hiddenApp As New Excel.Application
     If test Then
         jobNum = "461705"
-        week = calcWeek(Date)
-        we = "01.28.18"
+        week = calcWeek(43127)
     End If
+    we = Format(week, "mm.dd.yy")
     xlPath = timeCard.Getlnkpath(ThisWorkbook.path & "\Data.lnk") & "\" & jobNum & "\Week_" & we & "\TimeSheets\"
     lead_arr = getLeadSheets(xlPath)
     wb_arr = Split(lead_arr, ",")
@@ -243,12 +277,18 @@ Public Function loadShifts(Optional test As Boolean) As Integer
                     Set shft = New shift
                     shft.setDay = tRng.Offset(0, -3)
                     shft.setHrs = tRng.Offset(0, 1)
-                    tPhase = Split(tRng.Offset(0, 2), " ")
-                    shft.setPhase = Val(tPhase(0))
-                    If tPhase(0) <> 0 Then
-                        shft.setPhaseDesc = tPhase(1)
+                    If tRng.Offset(0, 2) <> 0 Then
+                        tPhase = Split(tRng.Offset(0, 2), " ")
+                        If tPhase(0) = holiday Then
+                            shft.setPhase = -1
+                        Else
+                            shft.setPhase = Val(tPhase(0))
+                            shft.setPhaseDesc = tPhase(1)
+                        End If
+                    Else
+                        shft.setPhase = 0
+                        shft.setPhaseDesc = vbNullString
                     End If
-                    shft.setPhaseDesc = tPhase(1)
                     shft.setUnits = tRng.Offset(0, 3)
                     shft.setDayDesc = tRng.Offset(0, 4)
                     weekRoster(l, e).addShift shft
@@ -274,9 +314,6 @@ shift_err:
     
 End Function
 
-Public Sub test_gen()
-    timeCard.genTimeCard True
-End Sub
 Sub showsave()
     Dim ws As Worksheet
     On Error Resume Next
@@ -296,6 +333,8 @@ Public Sub genLeadSheets()
     Application.DisplayAlerts = False
     Application.EnableEvents = False
     Dim bks As Collection
+    Dim ebks() As String
+    ReDim ebks(UBound(weekRoster), 2)
     Set bks = New Collection
     Dim done As Boolean
     done = False
@@ -334,14 +373,16 @@ Public Sub genLeadSheets()
         Dim ls As Workbook
         lsPath = iTemp.getLName & "_Week_" & we & ".xlsx"
         lsPath = xlPath + lsPath
-        open_data_file "Lead Card - Office.xlsm"
-        Set ls = Workbooks("Lead Card - Office.xlsm")
+        open_data_file "Lead Card.xlsx"
+        Set ls = Workbooks("Lead Card.xlsx")
         SetAttr ls.path, vbNormal
         Application.DisplayAlerts = False
         Application.EnableEvents = False
         ls.SaveAs lsPath, 51
         Application.EnableEvents = True
+        ls.Worksheets("Labor Tracking & Goals").Unprotect
         ls.Worksheets("Labor Tracking & Goals").Range("lead_name") = iTemp.getFullname
+        ls.Worksheets("Labor Tracking & Goals").Protect
         With ls.Worksheets("LEAD").Range("Monday").Cells(1, 1)
             ls.Worksheets("LEAD").Unprotect
             .Value = iTemp.getClass
@@ -358,7 +399,7 @@ Public Sub genLeadSheets()
                 e_cnt = e_cnt + 1
                 With ls.Worksheets("LEAD").Range("Monday").Cells(x + 1, 1)
                     ls.Worksheets("LEAD").Unprotect
-                    .Value = iTemp.getClass
+                    .Value = xTemp.getClass
                     .Offset(0, 1).Value = xTemp.getFName & " " & xTemp.getLName
                     .Offset(0, 2).Value = xTemp.getNum
                     ls.Worksheets("LEAD").Protect
@@ -379,6 +420,12 @@ Public Sub genLeadSheets()
         bk.Worksheets("SAVE").Visible = xlVeryHidden
         ls.Worksheets("ROSTER").Visible = xlVeryHidden
         ls.Worksheets("DATA").Visible = xlVeryHidden
+        Dim leadEmail As String
+        Dim spFile As String
+        leadEmail = Left(iTemp.getFName, 1) & iTemp.getLName & "@helixelectric.com"
+        spFile = getSharePointLink(ls.path) & "/" & ls.name
+        ebks(i, 0) = leadEmail
+        ebks(i, 1) = spFile
         Application.DisplayAlerts = True
         Application.ScreenUpdating = True
     Next i
@@ -386,10 +433,13 @@ Public Sub genLeadSheets()
         MsgBox ("ERROR!")
         Exit Sub
     End If
-
+    Dim ln As Integer
+    ln = 0
     For Each ls In bks
         ls.Save
         ls.Close
+        send_leadSheet ebks(ln, 0), ebks(ln, 1)
+        ln = ln + 1
     Next ls
     bk.Close False
 '    wb.Worksheets("LEAD").Visible = False
@@ -398,15 +448,46 @@ Public Sub genLeadSheets()
     Application.DisplayAlerts = True
 End Sub
 
+Public Sub test1()
+    week = Date
+    jobNum = "461707"
+    send_leadSheet "jsikorski@helixelectric.com", "https://helixelectricinc.sharepoint.com/sites/TeslaTimeCard/Shared Documents/Time Card Files/Data/461705/Week_01.28.18/TimeSheets/"
+    Stop
+End Sub
+Public Sub send_leadSheet(addr As String, lnk As String)
+    Dim xOutlookObj As Object
+    Dim xEmailObj As Object ' Outlook.MailItem
+'GET DEFAULT EMAIL SIGNATURE
+    On Error Resume Next
+    Dim signature As String
+    signature = Environ("appdata") & "\Microsoft\Signatures\"
+    If Dir(signature, vbDirectory) <> vbNullString Then
+        signature = signature & Dir$(signature & "*.txt")
+    Else:
+        signature = ""
+    End If
+    signature = CreateObject("Scripting.FileSystemObject").GetFile(signature).OpenAsTextStream(1, -2).ReadAll
+    
+    On Error GoTo 0
+    Set xOutlookObj = CreateObject("Outlook.Application")
+    Set xEmailObj = xOutlookObj.CreateItem(olMailItem)
+    With xEmailObj
+        .To = addr
+        .Subject = "Lead Sheet for " & jobNum & " Week Ending " & week
+        
+        .HTMLBody = "</head><body lang=EN-US link=""#0563C1"" vlink=""#954F72"" style='tab-interval:.5in'><div class=WordSection1><p class=MsoNormal>Your lead sheet for week " & week & " is now available for download:</p><p class=MsoNormal><a href=""" & lnk & """>HERE</a><o:p></o:p></p><p class=MsoNormal><o:p>&nbsp;</o:p></p></div></body></html>"
+        .display
+'            .Send
+    End With
+End Sub
+
 Public Sub showBooks()
 Attribute showBooks.VB_ProcData.VB_Invoke_Func = "S\n14"
-    If user = vbNullString Then
-        user = Environ$("Username")
-    End If
-    If user = "jsikorski" Then
-        ThisWorkbook.Unprotect xPass
+    If Environ$("username") = "jsikorski" Then
+        On Error Resume Next
+        ActiveWorkbook.Unprotect xPass
         For i = 1 To ThisWorkbook.Sheets.count
-            If ThisWorkbook.Worksheets(i).Visible = xlVeryHidden Then
+            If ThisWorkbook.Worksheets(i).Visible = False Then
                 ThisWorkbook.Worksheets(i).Visible = True
             End If
         Next i
@@ -414,15 +495,16 @@ Attribute showBooks.VB_ProcData.VB_Invoke_Func = "S\n14"
     Else
         MsgBox ("Sorry this toy is not for you to play with")
     End If
+    On Error GoTo 0
 End Sub
 
 
-Private Sub check_updates(uTime As Date)
+Private Sub check_updates(Optional uTime As Date)
+    If uTime = 0 Then
+        uTime = Now
+    End If
     Dim datPath As String
     datPath = Getlnkpath(ThisWorkbook.path & "\Data.lnk")
-    If DateDiff("s", uTime, FileDateTime(datPath & "\User.xlsx")) > 0 Then
-        user_form.get_user_list
-    End If
     If DateDiff("s", uTime, FileDateTime(datPath & "\Attendance Tracking.xlsx")) > 0 Then
         emp_table.update_emp_table
     End If
@@ -430,10 +512,9 @@ Private Sub check_updates(uTime As Date)
         Dim lc_wb As Workbook
         Set hiddenApp = New Excel.Application
         hiddenApp.DisplayAlerts = False
-        hiddenApp.Workbooks.Open Getlnkpath(ThisWorkbook.path & "\Data.lnk") & "\Lead Card - Office.xlsm"
-        Set lc_wb = hiddenApp.Workbooks("Lead Card - Office.xlsm")
+        hiddenApp.Workbooks.Open Getlnkpath(ThisWorkbook.path & "\Data.lnk") & "\Lead Card.xlsx"
+        Set lc_wb = hiddenApp.Workbooks("Lead Card.xlsx")
         total_pc.update_file
-        Stop
         hiddenApp.Quit
         Set hiddenApp = Nothing
     End If
@@ -521,9 +602,14 @@ Public Function file_auth() As Integer
     Set rg = Worksheets("USER").Range("A" & 2)
     Dim pw As String
     Dim auth As Integer
-    If user = "jsikorski" Then
-        file_auth = 1
-        Exit Function
+    Dim datPath As String
+'    If user = "jsikorski" Then
+'        file_auth = 1
+'        Exit Function
+'    End If
+    datPath = Getlnkpath(ThisWorkbook.path & "\Data.lnk")
+    If DateDiff("s", ThisWorkbook.Worksheets("HOME").Range("file_updated"), FileDateTime(datPath & "\User.xlsx")) > 0 Then
+        user_form.get_user_list
     End If
 login_retry:
     auth = 0
@@ -916,19 +1002,25 @@ Public Sub genTimeCard(Optional test As Boolean)
     Dim xlPath As String
     Dim xlFile As String
     Dim we As String
-    we = Format(week, "mm.dd.yy")
     If test Then
         jobNum = "461705"
-        week = calcWeek(Date)
-        we = "01.28.18"
+        week = calcWeek(43127)
+'        we = "01.28.18"
         jobPath = ThisWorkbook.path & "\" & "Data.lnk"
         jobPath = Getlnkpath(jobPath)
     End If
+    we = Format(week, "mm.dd.yy")
     xlPath = jobPath & "\" & jobNum & "\Week_" & we & "\TimePackets\"
     xlFile = jobNum & "_Week_" & we & "_TimeCards.xlsx"
     If loadRoster = -1 Then GoTo load_err
-    If timeCard.loadShifts(test) = -1 Then
-        Stop
+    If test Then
+        If timeCard.loadShifts(test) = -1 Then
+            Stop
+        End If
+    Else
+        If timeCard.loadShifts = -1 Then
+            Stop
+        End If
     End If
     hiddenApp.Workbooks.Open jobPath & "\Master TC.xlsx", False
     Set wb_tc = hiddenApp.Workbooks("Master TC.xlsx")
@@ -982,7 +1074,58 @@ load_err:
     
 End Sub
 
+Public Sub test_updatePacket()
+    timeCard.updatePacket True
+End Sub
+
+Public Sub updatePacket(Optional test As Boolean)
+    Dim we As String
+    Dim xlPath As String
+    Dim xlFile As String
+    Dim wb As Workbook
+    Dim tEmp As Variant
+    If test Then
+        jobNum = "461705"
+        week = calcWeek(43127)
+'        we = "01.28.18"
+        jobPath = ThisWorkbook.path & "\" & "Data.lnk"
+        jobPath = Getlnkpath(jobPath)
+        On Error GoTo 0
+        loadRoster
+        loadShifts test
+    End If
+    we = Format(week, "mm.dd.yy")
+    xlPath = jobPath & "\" & jobNum & "\Week_" & we & "\TimePackets\"
+    xlFile = jobNum & "_Week_" & we & ".xlsx"
+    Set hiddenApp = New Excel.Application
+    hiddenApp.DisplayAlerts = False
+    hiddenApp.Workbooks.Open xlPath & xlFile
+    Set wb = hiddenApp.Workbooks(xlFile)
+    Dim cnt As Integer
+    cnt = 0
+    Dim rng As Range
+    Set rng = wb.Worksheets("ROSTER").Range("emp_num")
+    For Each tEmp In weekRoster
+        If tEmp Is Nothing Then
+        Else
+retry_emp:
+            If rng.Offset(cnt, 0).Value = tEmp.getNum Then
+                rng.Offset(cnt, 2) = tEmp.getCalcPerDiem
+                Set rng = rng.Offset(0, 0)
+                cnt = 0
+            Else
+                cnt = cnt + 1
+                GoTo retry_emp
+            End If
+        End If
+    Next
+    Set wb = hiddenApp.Workbooks(xlFile)
+    wb.Close True, wb.path & "\" & wb.name
+    hiddenApp.Quit
+    Set hiddenApp = Nothing
+End Sub
 Public Sub showHiddenApps()
+    Application.Visible = True
     Dim oXLApp As Object
 
     '~~> Get an existing instance of an EXCEL application object
@@ -1073,16 +1216,16 @@ Private Sub loadMenu() 'ws As Worksheet)
     wb.Activate
 End Sub
 
-Public Function get_job_value(Optional c As Range) As Integer
-    If c Is Nothing Then
-        Set c = Application.Caller
+Public Function get_job_value(Optional C As Range) As Integer
+    If C Is Nothing Then
+        Set C = Application.Caller
     End If
     Dim tmp As Double
     tmp = 0
     Dim rng As Range
     Dim job_cnt As Integer
-    Set rng = ThisWorkbook.Worksheets("USER").Range("D" & c.Row)
-    job_cnt = c.Column - rng.Column - 1
+    Set rng = ThisWorkbook.Worksheets("USER").Range("D" & C.Row)
+    job_cnt = C.Column - rng.Column - 1
     For i = 0 To job_cnt
         If rng.Offset(0, i).Value = True Then
             tmp = tmp + Application.WorksheetFunction.Power(2, i)
