@@ -41,13 +41,17 @@ End Sub
 Private Function getSharePointLink(xlPath As String) As String
     Dim spPath As String
     Dim tmp() As String
-    xlPath = Right(xlPath, Len(xlPath) - Len(Getlnkpath(ThisWorkbook.path & "\Data.lnk")))
-    spPath = "https://helixelectricinc.sharepoint.com/sites/TeslaTimeCard/Shared Documents/Time Card Files/Data/"
-    tmp = Split(xlPath, "\")
-    For i = 1 To UBound(tmp) - 1
-        spPath = spPath & tmp(i) & "/"
-    Next i
-    getSharePointLink = spPath
+    If Left(xlPath, 5) = "https" Then
+        getSharePointLink = xlPath
+    Else
+        xlPath = Right(xlPath, Len(xlPath) - Len(Getlnkpath(ThisWorkbook.path & "\Data.lnk")))
+        spPath = "https://helixelectricinc.sharepoint.com/sites/TeslaTimeCard/Shared Documents/Time Card Files/Data/"
+        tmp = Split(xlPath, "\")
+        For i = 1 To UBound(tmp) - 1
+            spPath = spPath & tmp(i) & "/"
+        Next i
+        getSharePointLink = spPath
+    End If
 End Function
 
 Public Sub main(Optional logout As Boolean)
@@ -55,6 +59,8 @@ Public Sub main(Optional logout As Boolean)
         Unload mMenu
         GoTo relogin
     End If
+    Application.WindowState = xlMaximized
+    Application.DisplayFullScreen = True
     xPass = encryptPassword("A~™þ»›Ûæ")
     ThisWorkbook.Unprotect xPass
     For i = 1 To ThisWorkbook.Sheets.count
@@ -334,6 +340,7 @@ Public Sub genLeadSheets()
     Application.EnableEvents = False
     Dim bks As Collection
     Dim ebks() As String
+    Set hiddenApp = New Excel.Application
     ReDim ebks(UBound(weekRoster), 2)
     Set bks = New Collection
     Dim done As Boolean
@@ -373,13 +380,13 @@ Public Sub genLeadSheets()
         Dim ls As Workbook
         lsPath = iTemp.getLName & "_Week_" & we & ".xlsx"
         lsPath = xlPath + lsPath
-        open_data_file "Lead Card.xlsx"
-        Set ls = Workbooks("Lead Card.xlsx")
+        hiddenApp.Workbooks.Open Getlnkpath(ThisWorkbook.path & "\Data.lnk") & "\Lead Card.xlsx"
+        Set ls = hiddenApp.Workbooks("Lead Card.xlsx")
         SetAttr ls.path, vbNormal
-        Application.DisplayAlerts = False
-        Application.EnableEvents = False
+        hiddenApp.DisplayAlerts = False
+        hiddenApp.EnableEvents = False
         ls.SaveAs lsPath, 51
-        Application.EnableEvents = True
+        hiddenApp.EnableEvents = True
         ls.Worksheets("Labor Tracking & Goals").Unprotect
         ls.Worksheets("Labor Tracking & Goals").Range("lead_name") = iTemp.getFullname
         ls.Worksheets("Labor Tracking & Goals").Protect
@@ -444,8 +451,8 @@ Public Sub genLeadSheets()
     bk.Close False
 '    wb.Worksheets("LEAD").Visible = False
     ThisWorkbook.Protect xPass
-    Application.ScreenUpdating = True
-    Application.DisplayAlerts = True
+    hiddenApp.Quit
+    Set hiddenApp = Nothing
 End Sub
 
 Public Sub test1()
@@ -472,7 +479,7 @@ Public Sub send_leadSheet(addr As String, lnk As String)
     Set xOutlookObj = CreateObject("Outlook.Application")
     Set xEmailObj = xOutlookObj.CreateItem(olMailItem)
     With xEmailObj
-        .To = addr
+        .To = LCase(addr)
         .Subject = "Lead Sheet for " & jobNum & " Week Ending " & week
         
         .HTMLBody = "</head><body lang=EN-US link=""#0563C1"" vlink=""#954F72"" style='tab-interval:.5in'><div class=WordSection1><p class=MsoNormal>Your lead sheet for week " & week & " is now available for download:</p><p class=MsoNormal><a href=""" & lnk & """>HERE</a><o:p></o:p></p><p class=MsoNormal><o:p>&nbsp;</o:p></p></div></body></html>"
@@ -599,7 +606,7 @@ End Function
 
 Public Function file_auth() As Integer
     Dim rg As Range
-    Set rg = Worksheets("USER").Range("A" & 2)
+    Set rg = ThisWorkbook.Worksheets("USER").Range("A" & 2)
     Dim pw As String
     Dim auth As Integer
     Dim datPath As String
@@ -661,6 +668,7 @@ login_retry:
             Else
                 MsgBox "You have made 3 failed attempts!", 16, "FAILED UNLOCK"
                 If user <> "jsikorski" Then
+                    Unload loginMenu
                     ThisWorkbook.Close False
                 Else
                     Exit Do
@@ -1034,7 +1042,7 @@ Public Sub genTimeCard(Optional test As Boolean)
         Else
             wb_tc.Worksheets(1).Copy after:=wb_tc.Worksheets(wb_tc.Sheets.count)
             With wb_tc.Worksheets(wb_tc.Sheets.count)
-                .name = "TAG " & cnt
+                .name = tEmp.getLName
                 .Range("e_name") = tEmp.getFullname
                 .Range("e_num") = tEmp.getNum
                 .Range("we_date") = calcWeek(Date)

@@ -22,6 +22,8 @@ Private Sub Workbook_BeforeClose(Cancel As Boolean)
     Application.DisplayAlerts = False
     On Error GoTo 0
     ThisWorkbook.SaveAs Me.path & "\" & Me.name
+    Application.DisplayFullScreen = False
+    Application.WindowState = xlNormal
 End Sub
 
 Private Sub Workbook_BeforeSave(ByVal SaveAsUI As Boolean, Cancel As Boolean)

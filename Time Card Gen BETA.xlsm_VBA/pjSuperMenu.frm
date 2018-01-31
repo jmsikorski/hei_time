@@ -6,6 +6,7 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} pjSuperMenu
    ClientTop       =   465
    ClientWidth     =   5625
    OleObjectBlob   =   "pjSuperMenu.frx":0000
+   StartUpPosition =   2  'CenterScreen
 End
 Attribute VB_Name = "pjSuperMenu"
 Attribute VB_GlobalNameSpace = False
@@ -24,9 +25,8 @@ Private Sub smBuild_Click()
         Dim ans As Integer
         ans = MsgBox("The packet already exists, Are you sure you want to overwrite it?", vbYesNo + vbQuestion)
         If ans = vbYes Then
-            Stop
             xStrPath = jobPath & "\" & jobNum & "\Week_" & we & "\TimeSheets\"
-'            Kill xlFile
+            Kill xlFile
             xStrPath = jobPath & "\" & jobNum & "\Week_" & we & "\TimeSheets\"
             killFile = Dir(xStrPath & "\*.xlsx")
             Do While killFile <> ""

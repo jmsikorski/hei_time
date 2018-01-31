@@ -6,6 +6,7 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} mainMenu
    ClientTop       =   465
    ClientWidth     =   8280.001
    OleObjectBlob   =   "mainMenu.frx":0000
+   StartUpPosition =   2  'CenterScreen
 End
 Attribute VB_Name = "mainMenu"
 Attribute VB_GlobalNameSpace = False

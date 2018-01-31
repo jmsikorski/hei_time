@@ -6,6 +6,7 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} pjSuperPkt
    ClientTop       =   465
    ClientWidth     =   10365
    OleObjectBlob   =   "pjSuperPkt.frx":0000
+   StartUpPosition =   2  'CenterScreen
 End
 Attribute VB_Name = "pjSuperPkt"
 Attribute VB_GlobalNameSpace = False

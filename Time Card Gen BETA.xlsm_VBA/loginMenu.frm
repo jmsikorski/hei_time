@@ -6,6 +6,7 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} loginMenu
    ClientTop       =   465
    ClientWidth     =   8280.001
    OleObjectBlob   =   "loginMenu.frx":0000
+   StartUpPosition =   2  'CenterScreen
 End
 Attribute VB_Name = "loginMenu"
 Attribute VB_GlobalNameSpace = False
@@ -28,6 +29,7 @@ Public Sub mCancel_Click()
     ans = MsgBox("This file is locked" & vbNewLine & "Are you sure you want to quit?", 4147, "EXIT")
     If ans = 6 Then
         Application.DisplayAlerts = False
+        Unload Me
         ThisWorkbook.Close
     ElseIf ans = 2 Then
         If user = "jsikorski" Then
@@ -70,6 +72,7 @@ Public Sub mCancel_Click()
             If attempt = 4 Then
                 MsgBox "You have made 3 failed attempts!", 16, "FAILED UNLOCK"
                 Application.DisplayAlerts = False
+                Unload Me
                 ThisWorkbook.Close
             End If
         Loop

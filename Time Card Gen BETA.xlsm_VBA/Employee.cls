@@ -52,6 +52,8 @@ Private Sub calcPerDiem()
     For i = 0 To 6
         If tPerDiem(i) >= 8 Then
             tPerDiem(i) = 100
+        Else
+            tPerDiem(i) = 0
         End If
     Next i
 End Sub
