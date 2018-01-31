@@ -1007,6 +1007,7 @@ End Sub
 
 Public Sub genTimeCard(Optional test As Boolean)
     Dim hiddenApp As New Excel.Application
+    hiddenApp.DisplayAlerts = False
     Dim xlPath As String
     Dim xlFile As String
     Dim we As String
@@ -1032,6 +1033,7 @@ Public Sub genTimeCard(Optional test As Boolean)
     End If
     hiddenApp.Workbooks.Open jobPath & "\Master TC.xlsx", False
     Set wb_tc = hiddenApp.Workbooks("Master TC.xlsx")
+    wb_tc.SaveAs xlPath & xlFile
     Dim cnt As Integer
     cnt = 1
     Dim tEmp As Variant
@@ -1070,10 +1072,10 @@ rep_add:
         cnt = cnt + 1
     Next
     ThisWorkbook.Protect xPass
-    Stop
     hiddenApp.DisplayAlerts = False
     wb_tc.Worksheets(1).Delete
-    wb_tc.Close True, xlPath & xlFile
+    wb_tc.Save
+    wb_tc.Close
     hiddenApp.Quit
     Set hiddenApp = Nothing
     Exit Sub
@@ -1146,6 +1148,7 @@ Public Sub showHiddenApps()
 End Sub
 
 Public Function loadRoster() As Integer
+    Stop
     Dim we As String
     we = Format(week, "mm.dd.yy")
     Dim wb As Workbook
