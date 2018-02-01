@@ -9,30 +9,34 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = True
 Private Sub Workbook_BeforeClose(Cancel As Boolean)
     On Error Resume Next
-    Call ExportVBA
-    Call export_user_sheet
+    Application.Visible = False
+    If Environ$("Username") = "jsikorski" Then
+        Call ExportVBA
+    End If
     For i = 1 To ThisWorkbook.Sheets.count
-    ThisWorkbook.Unprotect "Dea504!!"
+    ThisWorkbook.Unprotect xPass
         If Worksheets(i).name <> "HOME" Then
             Worksheets(i).Visible = xlVeryHidden
         End If
     Next i
-    ThisWorkbook.Protect "Dea504!!", True, False
-    If user = "jsikorski" Then
-        Application.DisplayAlerts = False
-        ThisWorkbook.SaveAs Me.path & "\" & Me.name
-    End If
+    ThisWorkbook.Protect xPass, True, False
+    Application.DisplayAlerts = False
+    ThisWorkbook.SaveAs Me.path & "\" & Me.name
+    Application.DisplayFullScreen = False
+    Application.WindowState = xlNormal
+    hiddenApp.Quit
+    Set hiddenApp = Nothing
 End Sub
 
 Private Sub Workbook_BeforeSave(ByVal SaveAsUI As Boolean, Cancel As Boolean)
-    If Environ$("Username") <> "jsikorski" Then
-        MsgBox "This file is locked!", 16, "FILE LOCKED"
-        Cancel = True
-    Else
+    On Error Resume Next
+    If Environ$("Username") = "jsikorski" Then
         Call ExportVBA
     End If
+    On Error GoTo 0
 End Sub
 
 Private Sub Workbook_Open()
-    openBook
+    main
 End Sub
+

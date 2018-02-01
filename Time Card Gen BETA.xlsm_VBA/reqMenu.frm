@@ -6,6 +6,7 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} reqMenu
    ClientTop       =   465
    ClientWidth     =   8280.001
    OleObjectBlob   =   "reqMenu.frx":0000
+   StartUpPosition =   2  'CenterScreen
 End
 Attribute VB_Name = "reqMenu"
 Attribute VB_GlobalNameSpace = False
@@ -70,8 +71,8 @@ Private Sub reqSubmit_Click()
     user_form.export_user_sheet
     MsgBox "Thank you for your request." & vbNewLine & "You will recieve an email when your account is activated.", vbInformation + vbOKOnly, "SUBMITTED"
 reqSubmit_sub_end:
-    Me.Hide
-'    ThisWorkbook.Close False
+    Unload Me
+    ThisWorkbook.Close True
     Stop
 End Sub
 
@@ -99,7 +100,7 @@ End Sub
 
 Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
     If CloseMode = vbFormControlMenu Then
-        mainMenu.mCancel_Click
+        loginMenu.mCancel_Click
     End If
 End Sub
 
@@ -123,4 +124,3 @@ Private Function encryptPassword(pw As String) As String
     Next i
     encryptPassword = epw
 End Function
-

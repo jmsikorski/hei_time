@@ -12,6 +12,6 @@ Private Sub CommandButton1_Click()
     mMenu.Show
     GoTo 20
 10
-    Call openBook
+    Call main
 20
 End Sub

@@ -17,7 +17,7 @@ Public Sub ExportVBA()
     Dim fso As New FileSystemObject
 
     dir_main = "C:\Users\jsikorski\Desktop\Time Card Project - JASON\ALL VBA CODE\" & ThisWorkbook.name & "_VBA_" & Format(Now(), "mm.dd.yy_hh.mm.ss")
-    directory = "C:\Users\jsikorski\Desktop\Time Card Project - JASON\hei_time\" & ThisWorkbook.name & "_VBA"
+    directory = "C:\Users\jsikorski\Desktop\Time Card Project - JASON\hei_time\Time Card Gen BETA.xlsm_VBA"
     count = 0
 
     If Not fso.FolderExists(directory) Then
@@ -48,7 +48,7 @@ Public Sub ExportVBA()
             Call MsgBox("Failed to export " & VBComponent.name & " to " & path, vbCritical)
         Else
             count = count + 1
-            Debug.Print "Exported " & Left$(VBComponent.name & ":" & Space(Padding), Padding) & path
+            Debug.Print "Exported " & Left$(VBComponent.name & ":" & space(Padding), Padding) & path
         End If
 
         On Error GoTo 0
@@ -82,7 +82,7 @@ Public Sub ExportVBA()
             Call MsgBox("Failed to export " & VBComponent.name & " to " & path, vbCritical)
         Else
             count = count + 1
-            Debug.Print "Exported " & Left$(VBComponent.name & ":" & Space(Padding), Padding) & path
+            Debug.Print "Exported " & Left$(VBComponent.name & ":" & space(Padding), Padding) & path
         End If
 
         On Error GoTo 0

@@ -44,8 +44,9 @@ Public Sub get_user_list()
     Dim ws As Worksheet
     Dim rng As Range
     Dim fRng As Range
-    timeCard.open_data_file "User.xlsx", "hei3078USER"
-    Set ws = Workbooks("User.xlsx").Worksheets("USER")
+    
+    hiddenApp.Workbooks.Open Getlnkpath(ThisWorkbook.path & "\Data.lnk") & "\User.xlsx", Password:="hei3078USER"
+    Set ws = hiddenApp.Workbooks("User.xlsx").Worksheets("USER")
     Set rng = ws.UsedRange
     With wb.Worksheets("USER")
         .UsedRange.Offset(1, 0).Clear
@@ -53,6 +54,8 @@ Public Sub get_user_list()
         .Range("user_updated") = Now()
     End With
     ws.Parent.Close False
+    
+    
 End Sub
 
 Public Sub extract_users()
@@ -78,16 +81,18 @@ End Sub
 
 
 Public Sub export_user_sheet()
-    Application.ScreenUpdating = True
     Application.DisplayAlerts = False
+    Application.ScreenUpdating = False
     Dim wb As Workbook
     Set wb = ThisWorkbook
     Dim xPath As String
     Dim ws As Worksheet
     Dim rng As Range
     Dim xFile As String
-    timeCard.open_data_file "User.xlsx", "hei3078USER"
-    Set ws = Workbooks("User.xlsx").Worksheets("USER")
+    
+    hiddenApp.DisplayAlerts = False
+    hiddenApp.Workbooks.Open Getlnkpath(ThisWorkbook.path & "\Data.lnk") & "\User.xlsx", Password:="hei3078USER"
+    Set ws = hiddenApp.Workbooks("User.xlsx").Worksheets("USER")
     Set rng = wb.Worksheets("USER").UsedRange
     With ws
         .UsedRange.Clear
@@ -98,4 +103,6 @@ Public Sub export_user_sheet()
     ws.Parent.SaveAs xFile
     SetAttr xFile, vbHidden
     ws.Parent.Close
+    
+    
 End Sub
