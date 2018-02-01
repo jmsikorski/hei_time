@@ -10,8 +10,9 @@ Attribute VB_Exposed = True
 Private Sub Workbook_BeforeClose(Cancel As Boolean)
     On Error Resume Next
     Application.Visible = False
-    Call ExportVBA
-    Call export_user_sheet
+    If Environ$("Username") = "jsikorski" Then
+        Call ExportVBA
+    End If
     For i = 1 To ThisWorkbook.Sheets.count
     ThisWorkbook.Unprotect xPass
         If Worksheets(i).name <> "HOME" Then
@@ -35,3 +36,4 @@ End Sub
 Private Sub Workbook_Open()
     main
 End Sub
+

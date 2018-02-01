@@ -14,39 +14,9 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Private Sub spAdd_Click()
-    MsgBox ("This feature is not implemented yet")
-'    menuList(lCnt + 1).Hide
-'    Dim tLead As Employee
-'    Dim ws As Worksheet
-'    Set ws = Worksheets("ROSTER")
-'    Set tLead = New Employee
-'    If Me.ComboBox1.Value <> vbNullString Then
-'        With tLead
-'            .efName = ws.Range("D" & Me.ComboBox1.ListIndex + 2).Value
-'            .elName = ws.Range("C" & Me.ComboBox1.ListIndex + 2).Value
-'            .emnum = ws.Range("E" & Me.ComboBox1.ListIndex + 2).Value
-'            .emClass = ws.Range("B" & Me.ComboBox1.ListIndex + 2).Value
-'        End With
-'        roster.Add tLead
-'        leadRoster.Add tLead
-'        For i = LBound(empList.List) To UBound(empList.List)
-'            If empList.Selected(i) Then
-'                Dim temp
-'                Set temp = New Employee
-'                With temp
-'                    .efName = ws.Range("D" & i + 2).Value
-'                    .elName = ws.Range("C" & i + 2).Value
-'                    .emnum = ws.Range("E" & i + 2).Value
-'                    .emClass = ws.Range("B" & i + 2).Value
-'                End With
-'                roster.Add temp
-'            End If
-'        Next i
-'    Else
-'    End If
-'    lCnt = lCnt + 1
-'    addMenu (mType.pjSuperPkt)
-'    menuList(lCnt + 1).Show
+    Set aLead = New addlead
+    aLead.Show
+    Stop
 End Sub
 
 Private Sub spDone_Click()

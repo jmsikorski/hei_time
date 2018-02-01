@@ -13,6 +13,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+
 Private Sub ComboBox1_Change()
     On Error GoTo 1
     job = ComboBox1.Value
@@ -72,7 +73,7 @@ End Sub
 
 Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
     If CloseMode = vbFormControlMenu Then
-       loginMenu.mCancel_Click
+       mCancel_Click
     End If
 End Sub
 
