@@ -28,7 +28,7 @@ Public Property Let elName(s As String)
     lName = s
 End Property
 
-Public Property Let emnum(s As Integer)
+Public Property Let emNum(s As Integer)
     num = s
 End Property
 
@@ -128,7 +128,7 @@ Public Property Get newEmployee(ByVal i As Integer) As Integer
         With Me
             .efName = rg.Offset(0, 3).Value
             .elName = rg.Offset(0, 2).Value
-            .emnum = rg.Offset(0, 4).Value
+            .emNum = rg.Offset(0, 4).Value
             .emClass = rg.Offset(0, 1).Value
             If rg.Offset(0, 5).Value = "YES" Then
                 .emPerDiem = True

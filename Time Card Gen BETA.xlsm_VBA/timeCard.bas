@@ -27,15 +27,18 @@ Public Enum mType
 End Enum
 
 Public Sub t1()
-    Dim xFile As String
-    Dim xlPath As String
-    xlPath = timeCard.Getlnkpath(ThisWorkbook.path & "\Data.lnk") & "\461705\Week_01.28.18\TimeSheets\"
-    xlFile = "Tipton_Week_01.28.18.xlsx"
-    Dim sharepointPath As String
-    sharepointPath = "https://helixelectricinc.sharepoint.com/sites/TeslaTimeCard/Time%20Card%20Files/Data/461702/Week_02.04.18/TimeSheets/Tipton_Week_01.28.18.xlsx"
-    Stop
-    Set wb = Workbooks.Open(sharepointPath)
-
+    loadingMenu.Show
+    Dim ending As Integer
+    Dim pct As Single
+    ending = 1000
+    For i = 1 To ending
+        pct = i / ending
+        ThisWorkbook.Worksheets("HOME").Range("A" & i).Select
+        ActiveCell.Value = Getlnkpath(ThisWorkbook.path & "Data.lnk")
+        ActiveCell.Value = vbNullString
+        loadingMenu.updateProgress "test things", pct
+    Next
+    Unload loadingMenu
 End Sub
 
 Private Function getSharePointLink(xlPath As String) As String
@@ -59,7 +62,6 @@ Public Sub main(Optional logout As Boolean)
         Unload mMenu
         GoTo relogin
     End If
-    Stop
     Application.WindowState = xlMaximized
     xPass = encryptPassword("A~™þ»›Ûæ")
     ThisWorkbook.Unprotect xPass
@@ -245,14 +247,14 @@ Private Function getLeadSheets(xStrPath As String) As String
 
 End Function
 
-Public Function loadShifts(Optional test As Boolean) As Integer
+Public Function loadShifts(Optional tEst As Boolean) As Integer
     On Error GoTo shift_err
     Dim wb_arr() As String
     Dim lead_arr As String
     Dim xlPath As String
     Dim we As String
     Dim hiddenApp As New Excel.Application
-    If test Then
+    If tEst Then
         jobNum = "461705"
         week = calcWeek(43127)
     End If
@@ -510,21 +512,28 @@ Private Sub check_updates(Optional uTime As Date)
     Dim datPath As String
     datPath = Getlnkpath(ThisWorkbook.path & "\Data.lnk")
     If DateDiff("s", uTime, FileDateTime(datPath & "\Attendance Tracking.xlsx")) > 0 Then
-        Dim t1 As Date, t2 As Date
-        t1 = Now
         emp_table.update_emp_table
-        t2 = Now
-        Debug.Print DateDiff("s", t1, t2)
     End If
     If DateDiff("s", uTime, FileDateTime(datPath & "\Labor Report.xlsx")) > 0 Then
+        loadingMenu.Show
+        Dim tmp As Single
+        tmp = 0
+        loadingMenu.updateProgress "Open Phase Codes", tmp
         Dim lc_wb As Workbook
         Set hiddenApp = New Excel.Application
+        tmp = 0.02
+        loadingMenu.updateProgress "Open Phase Codes", tmp
         hiddenApp.DisplayAlerts = False
         hiddenApp.Workbooks.Open Getlnkpath(ThisWorkbook.path & "\Data.lnk") & "\Lead Card.xlsx"
         Set lc_wb = hiddenApp.Workbooks("Lead Card.xlsx")
         total_pc.update_file
+        tmp = 0.99
+        loadingMenu.updateProgress "Open Phase Codes", tmp
         hiddenApp.Quit
         Set hiddenApp = Nothing
+        tmp = 1
+        loadingMenu.updateProgress "Open Phase Codes", tmp
+        Unload loadingMenu
     End If
     
 End Sub
@@ -564,13 +573,13 @@ Public Function publicEncryptPassword(pw As String) As String
         End If
     End If
     Dim pwi As Long
-    Dim test As String
+    Dim tEst As String
     Dim epw As String
     Dim key As Long
     epw = vbnullStrig
     For i = 0 To Len(pw) - 1
-        test = Left(pw, 1)
-        pwi = Asc(test)
+        tEst = Left(pw, 1)
+        pwi = Asc(tEst)
         pw = Right(pw, Len(pw) - 1)
         key = ThisWorkbook.Worksheets("KEY").Range("A" & i + 1).Value
         If key = pwi Then key = key + 128
@@ -585,13 +594,13 @@ End Function
 
 Private Function encryptPassword(pw As String) As String
     Dim pwi As Long
-    Dim test As String
+    Dim tEst As String
     Dim epw As String
     Dim key As Long
     epw = vbnullStrig
     For i = 0 To Len(pw) - 1
-        test = Left(pw, 1)
-        pwi = Asc(test)
+        tEst = Left(pw, 1)
+        pwi = Asc(tEst)
         pw = Right(pw, Len(pw) - 1)
         key = ThisWorkbook.Worksheets("KEY").Range("A" & i + 1).Value
         If key = pwi Then key = key + 128
@@ -971,7 +980,6 @@ Public Sub resizeRoster(l As Integer, e As Integer)
             Set weekRoster(i, x) = newRoster(i, x)
             
             On Error Resume Next
-            Debug.Print newRoster(i, x).getFullname
         Next x
     Next i
     On Error GoTo 0
@@ -1008,7 +1016,7 @@ Public Sub insertRoster(index As Integer)
     Next x
 End Sub
 
-Public Sub genTimeCard(Optional test As Boolean)
+Public Sub genTimeCard(Optional tEst As Boolean)
     Dim hiddenApp As New Excel.Application
     hiddenApp.DisplayAlerts = False
     Dim xlPath As String
@@ -1016,7 +1024,7 @@ Public Sub genTimeCard(Optional test As Boolean)
     Dim we As String
     Dim shtCnt As Integer
     shtCnt = 0
-    If test Then
+    If tEst Then
         jobNum = "461705"
         week = calcWeek(43127)
 '        we = "01.28.18"
@@ -1027,8 +1035,8 @@ Public Sub genTimeCard(Optional test As Boolean)
     xlPath = jobPath & "\" & jobNum & "\Week_" & we & "\TimePackets\"
     xlFile = jobNum & "_Week_" & we & "_TimeCards.xlsx"
     If loadRoster = -1 Then GoTo load_err
-    If test Then
-        If timeCard.loadShifts(test) = -1 Then
+    If tEst Then
+        If timeCard.loadShifts(tEst) = -1 Then
             Stop
         End If
     Else
@@ -1139,7 +1147,7 @@ Public Sub test_updatePacket()
     timeCard.updatePacket True
 End Sub
 
-Public Sub updatePacket(Optional test As Boolean)
+Public Sub updatePacket(Optional tEst As Boolean)
     Dim we As String
     Dim xlPath As String
     Dim xlFile As String
@@ -1147,7 +1155,7 @@ Public Sub updatePacket(Optional test As Boolean)
     Dim wb As Workbook
     Dim tc_wb As Workbook
     Dim tEmp As Variant
-    If test Then
+    If tEst Then
         jobNum = "461705"
         week = calcWeek(43127)
 '        we = "01.28.18"
@@ -1155,7 +1163,7 @@ Public Sub updatePacket(Optional test As Boolean)
         jobPath = Getlnkpath(jobPath)
         On Error GoTo 0
         loadRoster
-        loadShifts test
+        loadShifts tEst
     End If
     we = Format(week, "mm.dd.yy")
     xlPath = jobPath & "\" & jobNum & "\Week_" & we & "\TimePackets\"
@@ -1304,7 +1312,7 @@ Public Function loadRoster() As Integer
         xlEmp.emClass = tmp.Offset(0, 2)
         xlEmp.elName = tmp.Offset(0, 3)
         xlEmp.efName = tmp.Offset(0, 4)
-        xlEmp.emnum = tmp.Offset(0, 5)
+        xlEmp.emNum = tmp.Offset(0, 5)
         xlEmp.emPerDiem = tmp.Offset(0, 6)
        Set weekRoster(tmp.Offset(0, 0).Value, tmp.Offset(0, 1).Value) = xlEmp
     Next tmp
@@ -1342,7 +1350,7 @@ Private Sub loadMenu() 'ws As Worksheet)
         Set tmp = New Employee
         tmp.efName = rng.Offset(0, 4).Value
         tmp.elName = rng.Offset(0, 3).Value
-        tmp.emnum = rng.Offset(0, 5).Value
+        tmp.emNum = rng.Offset(0, 5).Value
         tmp.emClass = rng.Offset(0, 2).Value
         tmp.emPerDiem = rng.Offset(0, 6).Value
         Set weekRoster(rng.Offset(0, 0).Value, rng.Offset(0, 1).Value) = tmp

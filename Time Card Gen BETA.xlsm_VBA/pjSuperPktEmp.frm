@@ -1,7 +1,7 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} pjSuperPktEmp 
    Caption         =   "Add Employees"
-   ClientHeight    =   7860
+   ClientHeight    =   9105.001
    ClientLeft      =   120
    ClientTop       =   465
    ClientWidth     =   5625
@@ -184,6 +184,8 @@ Public Sub setSheet(menuNum As Integer)
     Dim wide As Integer
     Dim eBoxIndex As Integer
     Dim eBoxCol As Integer
+    Dim bCnt As Integer
+    bCnt = 5
     eBoxCol = 1
     eBoxIndex = 0
     wide = 0
@@ -234,29 +236,44 @@ Public Sub setSheet(menuNum As Integer)
         Next te
     Next i
     wide = maxLen * 10
+    Dim bNames() As String
+    ReDim bNames(bCnt)
+    bNames = Split("spAdd,spDone,pLead,nLead,updateGoals", ",")
+    bCnt = bCnt + 1
+    Dim buff As Integer
+    Dim space As Double
+    Dim bWide As Double
+    bWide = Me.spAdd.Width
     With Me
         .Height = .Controls("empList1").Height + .E1.Height + .Label2.Height + .spAdd.Height + 78
         .Width = wide * numBox + 18
+        buff = ((Me.Width - ((bCnt - 1) * bWide)) / bCnt)
+        space = (Me.Width - (buff / 2)) - (bCnt * bWide)
+        space = (space / bCnt)
+        space = (Me.Width - (buff / 2) - ((bCnt - 1) * bWide))
+        space = (space / bCnt)
         .Label2.Caption = job & vbNewLine & "Week Ending: " & Format(week, "mm-dd-yy")
         .Label2.Left = 6
         .Label2.Width = wide * numBox
         .E1.Caption = "Lead " & lNum & "/" & UBound(menuList) & " "
         .E1.Caption = .E1.Caption & weekRoster(lNum - 1, 0).getFName & " " & weekRoster(lNum - 1, 0).getLName
         .E1.Left = 6
-        .E1.Top = pjSuperPkt.L1.Top
+        .E1.Top = lMenu.L1.Top
         .E1.Width = wide * numBox
-        .spAdd.Left = (.Width - 532) / 5
-        .spAdd.Top = .Controls("empList1").Top + .Controls("empList1").Height
-        .spDone.Left = (.Width - 532) / 5 * 2 + 130
-        .spDone.Top = .Controls("empList1").Top + .Controls("empList1").Height
-        .pLead.Left = (.Width - 532) / 5 * 3 + 260
-        .pLead.Top = .Controls("empList1").Top + .Controls("empList1").Height
-        .nLead.Left = (.Width - 532) / 5 * 4 + 390
-        .nLead.Top = .Controls("empList1").Top + .Controls("empList1").Height
-        .StartUpPosition = 0
-        .Left = Application.Left + (0.5 * Application.Width) - (0.5 * .Width)
-        .Top = Application.Top + (0.5 * Application.Height) - (0.5 * .Height)
-        lNum = lNum + 1
+        .Show
+        If .Width > Application.Width Then
+            Stop
+        ElseIf .Width > .spAdd.Width * bCnt Then
+            For i = 0 To UBound(bNames)
+retry_wide:
+                .Controls(bNames(i)).Left = buff + i * (bWide + space)
+                .Controls(bNames(i)).Top = .Controls("empList1").Top + .Controls("empList1").Height
+            Next
+            .StartUpPosition = 0
+            .Left = Application.Left + (0.5 * Application.Width) - (0.5 * .Width)
+            .Top = Application.Top + (0.5 * Application.Height) - (0.5 * .Height)
+            lNum = lNum + 1
+        End If
     End With
     For i = 1 To numBox
         With Me.Controls.Item("empList" & i)
@@ -266,9 +283,13 @@ Public Sub setSheet(menuNum As Integer)
     Next i
     Exit Sub
 10
-    tEmp.emnum = -1
+    tEmp.emNum = -1
     Resume Next
 20
+End Sub
+
+Private Sub updateGoals_Click()
+
 End Sub
 
 Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)

@@ -6,6 +6,7 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} pjSuperPkt
    ClientTop       =   465
    ClientWidth     =   10365
    OleObjectBlob   =   "pjSuperPkt.frx":0000
+   ShowModal       =   0   'False
    StartUpPosition =   2  'CenterScreen
 End
 Attribute VB_Name = "pjSuperPkt"
@@ -17,7 +18,6 @@ Attribute VB_Exposed = False
 Private Sub spAdd_Click()
     Set aLead = New addlead
     aLead.Show
-    Stop
 End Sub
 
 Private Sub spDone_Click()
@@ -143,7 +143,6 @@ Private Sub UserForm_Initialize()
     lCnt = 0
     cnt = 0
     For Each tmp In ws.Range("E2", ws.Range("E2").End(xlDown))
-        Debug.Print tmp.Offset(0, -1) & " " & tmp.Offset(0, -2)
         If tmp.Offset(0, 2).Value = "YES" Then
             lCnt = lCnt + 1
         End If
@@ -238,11 +237,10 @@ Private Sub UserForm_Initialize()
             .Width = wide * (i + 1)
         End With
     Next i
-    GoTo 20
+    Exit Sub
 10
-    tEmp.emnum = -1
+    tEmp.emNum = -1
     Resume Next
-20
 End Sub
 Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
     If CloseMode = vbFormControlMenu Then

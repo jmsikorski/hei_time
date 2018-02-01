@@ -18,15 +18,25 @@ Public Sub update_emp_table()
     Dim rng As Range
     Dim ws As Worksheet
     Dim cnt As Integer
+    Dim pct As Single
+    Dim emNum As Integer
     Set hiddenApp = New Excel.Application
     On Error Resume Next
+    pct = 0
+    loadingMenu.Show
+    loadingMenu.updateProgress "Employee Roster", pct
     hiddenApp.Workbooks.Open (timeCard.Getlnkpath(ThisWorkbook.path & "\Data.lnk") & "\Attendance Tracking.xlsx")
+    emNum = hiddenApp.Workbooks("Attendance Tracking.xlsx").Worksheets(1).ListObjects("emp_roster").ListRows.count
     On Error GoTo 0
+    emNum = emNum + 3
     cnt = 1
     Set ws = ThisWorkbook.Worksheets("ROSTER")
+    ws.Unprotect xPass
     ws.Range(ws.ListObjects("emp_roster").DataBodyRange(1, 1), ws.ListObjects("emp_roster").DataBodyRange(ws.ListObjects("emp_roster").ListRows.count - 1, 7)).Clear
     ws.Range(ws.ListObjects("emp_roster").DataBodyRange(1, 1), ws.ListObjects("emp_roster").DataBodyRange(1, 7)).Clear
 1:
+    pct = (cnt + 3) / emNum
+    loadingMenu.updateProgress "Employee Roster", pct
     Set new_emp = get_emp(cnt)
     If new_emp Is Nothing Then
         cnt = cnt + 1
@@ -63,6 +73,10 @@ update_done:
     Application.ScreenUpdating = True
     hiddenApp.Quit
     Set hiddenApp = Nothing
+    ws.Protect xPass
+    pct = 1
+    loadingMenu.updateProgress "Employee Roster", pct
+    Unload loadingMenu
     Exit Sub
 10:
     Dim ans As Integer
@@ -86,7 +100,7 @@ update_done:
 20:
     MsgBox "ERROR: Unable to update roster", vbCritical, "ERROR!"
     On Error GoTo 0
-    ws.Protect pw
+    ws.Protect xPass
     Application.ScreenUpdating = True
 End Sub
 
