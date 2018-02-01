@@ -6,7 +6,6 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} reqMenu
    ClientTop       =   465
    ClientWidth     =   8280.001
    OleObjectBlob   =   "reqMenu.frx":0000
-   StartUpPosition =   2  'CenterScreen
 End
 Attribute VB_Name = "reqMenu"
 Attribute VB_GlobalNameSpace = False
@@ -100,8 +99,7 @@ End Sub
 
 Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
     If CloseMode = vbFormControlMenu Then
-        Unload Me
-        loginMenu.Show
+        mainMenu.mCancel_Click
     End If
 End Sub
 
@@ -125,3 +123,4 @@ Private Function encryptPassword(pw As String) As String
     Next i
     encryptPassword = epw
 End Function
+

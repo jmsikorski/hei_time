@@ -14,7 +14,6 @@ Private eClass As String
 Private ePerDiem As Boolean
 Private shifts As Collection
 Private lead As Integer
-Private tPerDiem(7) As Double
 
 Public Property Let eLead(i As Integer)
     lead = i
@@ -39,38 +38,6 @@ End Property
 Public Sub addShift(s As shift)
     shifts.Add s
 End Sub
-
-Private Sub calcPerDiem()
-    Dim s As shift
-    Dim n As Double
-    For Each s In shifts
-        n = s.getPhase
-        If n <> 88081 And n <> 88086 And n <> -1 And n <> 16950 Then
-            tPerDiem(s.getDay) = tPerDiem(s.getDay) + s.getHrs
-        End If
-    Next s
-    For i = 0 To 6
-        If tPerDiem(i) >= 8 Then
-            tPerDiem(i) = 100
-        Else
-            tPerDiem(i) = 0
-        End If
-    Next i
-End Sub
-
-Public Property Get getCalcPerDiem() As Double
-    Dim amt As Double
-    amt = 0
-    If ePerDiem Then
-        calcPerDiem
-        For i = 0 To 6
-            amt = amt + tPerDiem(i)
-        Next i
-        getCalcPerDiem = amt
-    Else
-        getCalcPerDiem = amt
-    End If
-End Property
 
 Public Property Get getLead() As Integer
     getLead = lead
@@ -110,9 +77,6 @@ Private Sub Class_Initialize()
     num = -1
     eClass = "NONE"
     ePerDiem = False
-    For i = 0 To 6
-        tPerDiem(i) = 0
-    Next i
     lead = -1
     Set shifts = New Collection
 End Sub

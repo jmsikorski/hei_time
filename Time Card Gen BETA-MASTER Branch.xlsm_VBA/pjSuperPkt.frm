@@ -6,7 +6,6 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} pjSuperPkt
    ClientTop       =   465
    ClientWidth     =   10365
    OleObjectBlob   =   "pjSuperPkt.frx":0000
-   StartUpPosition =   2  'CenterScreen
 End
 Attribute VB_Name = "pjSuperPkt"
 Attribute VB_GlobalNameSpace = False
@@ -14,9 +13,39 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Private Sub spAdd_Click()
-    Set aLead = New addlead
-    aLead.Show
-    Stop
+    MsgBox ("This feature is not implemented yet")
+'    menuList(lCnt + 1).Hide
+'    Dim tLead As Employee
+'    Dim ws As Worksheet
+'    Set ws = Worksheets("ROSTER")
+'    Set tLead = New Employee
+'    If Me.ComboBox1.Value <> vbNullString Then
+'        With tLead
+'            .efName = ws.Range("D" & Me.ComboBox1.ListIndex + 2).Value
+'            .elName = ws.Range("C" & Me.ComboBox1.ListIndex + 2).Value
+'            .emnum = ws.Range("E" & Me.ComboBox1.ListIndex + 2).Value
+'            .emClass = ws.Range("B" & Me.ComboBox1.ListIndex + 2).Value
+'        End With
+'        roster.Add tLead
+'        leadRoster.Add tLead
+'        For i = LBound(empList.List) To UBound(empList.List)
+'            If empList.Selected(i) Then
+'                Dim temp
+'                Set temp = New Employee
+'                With temp
+'                    .efName = ws.Range("D" & i + 2).Value
+'                    .elName = ws.Range("C" & i + 2).Value
+'                    .emnum = ws.Range("E" & i + 2).Value
+'                    .emClass = ws.Range("B" & i + 2).Value
+'                End With
+'                roster.Add temp
+'            End If
+'        Next i
+'    Else
+'    End If
+'    lCnt = lCnt + 1
+'    addMenu (mType.pjSuperPkt)
+'    menuList(lCnt + 1).Show
 End Sub
 
 Private Sub spDone_Click()
@@ -45,7 +74,7 @@ Private Sub spDone_Click()
         MsgBox "You must Select a Lead!", vbExclamation + vbOKOnly
         Exit Sub
     End If
-    If UBound(menuList) = 0 And isSave <> 1 Then 'isSave < 0 Then
+    If isSave < 0 Then
         ReDim weekRoster(lIndex - 1, eCount)
     Else
         ReDim tmpRoster(lIndex - 1, eCount)
@@ -56,7 +85,7 @@ Private Sub spDone_Click()
         For x = 0 To tlist.ListCount - 1
             If tlist.Selected(x) Then
                 leadRoster(i - 1, x).eLead = 0
-                If UBound(menuList) = 0 And isSave <> 1 Then 'isSave < 0 Then
+                If isSave < 0 Then
                     Set weekRoster(lIndex, 0) = leadRoster(i - 1, x)
                 Else
                     Set tmpRoster(lIndex, 0) = leadRoster(i - 1, x)
@@ -66,66 +95,29 @@ Private Sub spDone_Click()
         Next x
     Next i
     lNum = 1
+    ReDim menuList(lIndex)
+    For i = 0 To lIndex
+        addMenu (mType.pjSuperPktEmp)
+    Next i
     Dim ldn As Integer
     ldn = 0
-    ReDim menuList(lIndex)
     
-    If UBound(weekRoster) <> lIndex - 1 Then
-        If UBound(weekRoster) < lIndex - 1 Then
-            For i = 0 To UBound(tmpRoster)
-                If (tmpRoster(i, 0).getFullname = weekRoster(ldn, 0).getFullname) Then
-                    For x = 0 To eCount
-                        Set tmpRoster(i, x) = weekRoster(ldn, x)
-                    Next x
-                    If ldn = UBound(weekRoster) Then Exit For
-                    ldn = ldn + 1
-                End If
-            Next i
-        Else
-            For i = 0 To UBound(weekRoster)
-                If (tmpRoster(ldn, 0).getFullname = weekRoster(i, 0).getFullname) Then
-                    For x = 0 To eCount
-                        Set tmpRoster(ldn, x) = weekRoster(i, x)
-                    Next x
-                    If ldn = UBound(tmpRoster) Then Exit For
-                    ldn = ldn + 1
-                End If
-            Next i
-        End If
+    If isSave > 0 Then
         resizeRoster lIndex - 1, eCount
         For i = 0 To lIndex - 1
-            For e = 0 To eCount
-                Set weekRoster(i, e) = tmpRoster(i, e)
-            Next e
-'            If ldn <> lIndex - 1 Then
-'                If weekRoster(i, 0) Is Nothing Then
-'                    For x = 0 To eCount
-'                        Set weekRoster(i, 0) = tmpRoster(i, 0)
-'                    Next x
-'                End If
-'                If (tmpRoster(i, 0).getFullname = weekRoster(ldn, 0).getFullname) Then
-'                    For x = 0 To eCount
-'                        Set weekRoster(i, x) = weekRoster(ldn, x)
-'                    Next x
-'                    ldn = ldn + 1
-'                Else
-'                    For x = 0 To eCount
-'                        Set weekRoster(i, 0) = tmpRoster(i, 0)
-'                    Next x
-'                End If
-'            Else
-'                For x = 0 To eCount
-'                    Set weekRoster(i, 0) = tmpRoster(i, 0)
-'                Next x
-'            End If
+            If (tmpRoster(i, 0).getNum = weekRoster(ldn, 0).getNum) Then
+                For x = 0 To eCount
+                    Set weekRoster(i, x) = weekRoster(ldn, x)
+                Next x
+                ldn = ldn + 1
+            Else
+                Set weekRoster(i, 0) = tmpRoster(i, 0)
+            End If
         Next i
-        resizeRoster lIndex - 1, eCount
     End If
+    
     For i = 0 To UBound(weekRoster)
-        With menuList(i)
-            addMenu (4) 'mType.pjSuperPktEmp)
-            menuList(i).setSheet (i)
-        End With
+        menuList(i).setSheet (i)
     Next i
     Me.Hide
     menuList(0).Show
@@ -180,10 +172,10 @@ Private Sub UserForm_Initialize()
     For i = 0 To cnt
         Dim tBox As Control
         If ws.Range("G" & i + 2).Value = "YES" Then
-            Dim tEmp As Employee
-            Set tEmp = New Employee
-            leg = tEmp.newEmployee(i)
-            name = tEmp.getFName & " " & tEmp.getLName
+            Dim temp As Employee
+            Set temp = New Employee
+            leg = temp.newEmployee(i)
+            name = temp.getFName & " " & temp.getLName
             If maxLen < Len(name) Then
                 maxLen = Len(name)
             End If
@@ -204,12 +196,12 @@ Private Sub UserForm_Initialize()
                 Set tempLead = weekRoster(tl, 0)
                 If tempLead Is Nothing Then
                 Else
-                    If tEmp.getNum = tempLead.getNum Then
+                    If temp.getNum = tempLead.getNum Then
                         tBox.Selected(tBox.ListCount - 1) = True
                     End If
                 End If
             Next tl
-            Set leadRoster(eBoxCol - 1, eBoxIndex - 1) = tEmp
+            Set leadRoster(eBoxCol - 1, eBoxIndex - 1) = temp
         End If
     Next i
     wide = maxLen * 10
@@ -238,7 +230,7 @@ Private Sub UserForm_Initialize()
     Next i
     GoTo 20
 10
-    tEmp.emnum = -1
+    temp.emnum = -1
     Resume Next
 20
 End Sub

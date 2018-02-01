@@ -6,7 +6,6 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} pjSuperMenu
    ClientTop       =   465
    ClientWidth     =   5625
    OleObjectBlob   =   "pjSuperMenu.frx":0000
-   StartUpPosition =   2  'CenterScreen
 End
 Attribute VB_Name = "pjSuperMenu"
 Attribute VB_GlobalNameSpace = False
@@ -16,23 +15,15 @@ Attribute VB_Exposed = False
 Private Sub smBuild_Click()
     Dim we As String
     Dim xlFile As String
-    Dim killFile As String
-    Dim xStrPath As String
     we = Format(week, "mm.dd.yy")
-    xlFile = jobPath & "\" & jobNum & "\Week_" & we & "\TimePackets\" & jobNum & "_Week_" & we & ".xlsx"
+    xlFile = jobPath & "\" & jobNum & "\TimePackets\Week_" & we & "\" & jobNum & "_Week_" & we & ".xlsx"
     If testFileExist(xlFile) > 0 Then
         On Error Resume Next
         Dim ans As Integer
         ans = MsgBox("The packet already exists, Are you sure you want to overwrite it?", vbYesNo + vbQuestion)
         If ans = vbYes Then
-            xStrPath = jobPath & "\" & jobNum & "\Week_" & we & "\TimeSheets\"
             Kill xlFile
-            xStrPath = jobPath & "\" & jobNum & "\Week_" & we & "\TimeSheets\"
-            killFile = Dir(xStrPath & "\*.xlsx")
-            Do While killFile <> ""
-                Kill xStrPath & killFile
-                killFile = Dir
-            Loop
+            Kill jobPath & "\" & jobNum & "\TimeSheets\Week_" & we & "\*.*"
         Else
             Exit Sub
         End If
@@ -60,10 +51,6 @@ End Sub
 
 Private Sub smSubmit_Click()
     timeCard.genTimeCard
-    timeCard.updatePacket
-    MsgBox "Time Cards Complete"
-    Unload Me
-    mMenu.Show
 End Sub
 
 Private Sub UserForm_Initialize()

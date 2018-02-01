@@ -1,53 +1,23 @@
-VERSION 1.0 CLASS
-BEGIN
-  MultiUse = -1  'True
-END
-Attribute VB_Name = "ThisWorkbook1"
-Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
-Attribute VB_PredeclaredId = True
-Attribute VB_Exposed = True
+Attribute VB_Name = "open_phase_code"
 Private Enum state
     open_phase = 1
     close_phase = 2
     update_phase = 3
 End Enum
+Public hiddenApp As Application
 
 Private Const pw = ""
-    
-Private Sub Workbook_Open()
-    Application.DisplayAlerts = False
-    Application.ScreenUpdating = False
-    Dim rng As Range
-    Dim ws As Worksheet
-    Dim xFile As String
-    Set ws = ThisWorkbook.Worksheets("Open Phase Codes")
-    ws.Unprotect
-    If DateDiff("h", Me.Worksheets("instructions").Range("updated"), Now()) > 1 Then
-        xFile = Me.path & "\" & Me.name
-        SetAttr xFile, vbNormal
-        update_phase_code
-        Set rng = ws.ListObjects("emp_roster").DataBodyRange(ws.ListObjects("emp_roster").DataBodyRange.Rows.count, 1)
-        resize_name_range "open_codes", ws, ws.ListObjects("emp_roster").DataBodyRange(1, 1).Offset(0, 2), rng.Offset(0, 2)
-        Me.SaveAs xFile
-        Application.DisplayAlerts = True
-        Application.ScreenUpdating = True
-    End If
-    ws.Protect
-End Sub
 
 Public Sub close_phase_code()
-Attribute close_phase_code.VB_Description = "Close phase code and delete it from the list\n"
-Attribute close_phase_code.VB_ProcData.VB_Invoke_Func = "D\n14"
     'on error goto 10
     Dim new_code As Double
     Dim new_desc As String
     Dim rng As Range
     Dim ws As Worksheet
     Set ws = ThisWorkbook.Worksheets("Open Phase Codes")
-    Set rng = ws.ListObjects("emp_roster").Range(1, 1)
+    Set rng = ws.ListObjects("phase_list").Range(1, 1)
     new_code = get_code(close_phase)
-    For Each rng In ws.ListObjects("emp_roster").ListColumns(1).DataBodyRange
+    For Each rng In ws.ListObjects("phase_list").ListColumns(1).DataBodyRange
         If rng.Value = new_code Then
             ws.Unprotect pw
             ws.Rows(rng.Row).EntireRow.Delete
@@ -61,63 +31,68 @@ Attribute close_phase_code.VB_ProcData.VB_Invoke_Func = "D\n14"
     MsgBox "Error: Unable to close Phase Code", vbExclamation, "ERROR!"
 End Sub
 
-Public Sub update_emp_table()
-Attribute update_emp_table.VB_Description = "Update Open phase codes from Labor Report\n"
-Attribute update_emp_table.VB_ProcData.VB_Invoke_Func = "U\n14"
+Public Sub update_phase_code()
+
     Application.ScreenUpdating = False
     'on error goto 10
-    Dim new_emp As Range
+    Dim new_code As Double
     Dim new_desc As String
     Dim rng As Range
     Dim ws As Worksheet
     Dim cnt As Integer
+    Dim lc_wb As Workbook
+    Set lc_wb = hiddenApp.Workbooks("Lead Card.xlsx")
+    hiddenApp.Workbooks.Open lc_wb.path & "\Labor Report.xlsx"
     cnt = 1
-    Set ws = ThisWorkbook.Worksheets("Roster")
+    Set ws = lc_wb.Worksheets("Open Phase Codes")
     ws.Unprotect pw
-'    ws.Range("A2", ws.Range("A1").End(xlDown).Offset(0, 1)).Clear
-    ws.ListObjects("emp_roster").DataBodyRange.Clear
-'    Set rng = ws.Range("A2")
-    For Each rng In ws.ListObjects("emp_roster").DataBodyRange
+    ws.Range(ws.ListObjects("phase_list").DataBodyRange(1, 1), ws.ListObjects("phase_list").DataBodyRange(ws.ListObjects("phase_list").ListRows.count - 6, 2)).Delete
+    ws.Range(ws.ListObjects("phase_list").DataBodyRange(1, 1), ws.ListObjects("phase_list").DataBodyRange(1, 2)).Clear
+    Set rng = ws.ListObjects("phase_list").DataBodyRange(1, 1)
+    Application.ScreenUpdating = True
+    new_code = 1
+    Do While new_code <> 0
 1:
-        new_emp = get_emp(cnt)
-        If new_emp = Nothing Then
+        new_code = get_code(update_phase, cnt)
+        If new_code = -1 Then
+            GoTo 20
+        ElseIf new_code = -2 Then
             cnt = cnt + 1
             GoTo 1
+        ElseIf new_code = 0 Then
+            Exit Do
         End If
-        For Each rng In ws.ListObjects("emp_roster").ListColumns(1).DataBodyRange
+        For Each rng In ws.ListObjects("phase_list").ListColumns(1).DataBodyRange
             If rng.Value = vbNullString Then
                 GoTo 5
             End If
-            If rng.Value = new_emp Then
+            If rng.Value = new_code Then
                 cnt = cnt + 1
                 GoTo 1
             End If
         Next rng
 5:
-        If insert_emp(new_emp) = -1 Then
+        new_desc = get_description(update_phase, cnt)
+        If new_desc = vbNullString Then
             GoTo 20
+        Else
+            If insert_code(new_code, new_desc) = -1 Then
+                GoTo 20
+            End If
+            cnt = cnt + 1
         End If
-        cnt = cnt + 1
     Loop
     On Error GoTo 0
-'    ws.Range(ws.Cells(rng_end + 1, 1), ws.Cells(rng_end + 1000, 2)).EntireRow.Delete
-    Set rng = ws.Range(ws.ListObjects("emp_roster").Range(1, 1), ws.ListObjects("emp_roster").Range(1, 2).End(xlDown))
-    ws.ListObjects("emp_roster").Resize rng
-    Workbooks("Attendance Tracking.xlsx").Close
-    With Me.Worksheets("Instructions")
-        .Unprotect
-        .Range("updated") = Now()
-        .Protect
-    End With
-    Application.ScreenUpdating = True
+    ws.ListObjects("phase_list").ListRows(ws.ListObjects("phase_list").ListRows.count - 5).Delete
     ws.Protect pw
+    hiddenApp.Workbooks("Labor Report.xlsx").Close False
     Exit Sub
 10:
     Dim ans As Integer
     With Application.FileDialog(msoFileDialogOpen)
-        .Title = "Select Labor Report"
+        .title = "Select Labor Report"
         .Filters.Add "Excel Files", "*.xls*", 1
-        .InitialFileName = Me.path & "\"
+        .InitialFileName = ActiveWorkbook.path & "\"
         ans = .Show
         If ans = 0 Then
             Exit Sub
@@ -129,16 +104,14 @@ Attribute update_emp_table.VB_ProcData.VB_Invoke_Func = "U\n14"
     Resume Next
     Exit Sub
 20:
-    MsgBox "ERROR: Unable to update roster", vbCritical, "ERROR!"
+    MsgBox "ERROR: Unable to update phase Codes Err:20", vbCritical, "ERROR!"
     On Error GoTo 0
     ws.Protect pw
     Application.ScreenUpdating = True
 End Sub
 
 Public Sub open_phase_code()
-Attribute open_phase_code.VB_Description = "Open new phase code and add it to the list"
-Attribute open_phase_code.VB_ProcData.VB_Invoke_Func = "O\n14"
-    'on error goto 10
+    On Error GoTo 10
     Dim new_code As Double
     Dim new_desc As String
     Dim rng As Range
@@ -146,7 +119,7 @@ Attribute open_phase_code.VB_ProcData.VB_Invoke_Func = "O\n14"
     Set ws = ThisWorkbook.Worksheets("Open Phase Codes")
     ws.Unprotect pw
     new_code = get_code(open_phase)
-    For Each rng In ws.ListObjects("emp_roster").ListColumns(1).DataBodyRange
+    For Each rng In ws.ListObjects("phase_list").ListColumns(1).DataBodyRange
         If rng.Value = new_code Then
             MsgBox "Phase code already open!", vbExclamation, "ERROR!"
             Exit Sub
@@ -174,28 +147,64 @@ Attribute open_phase_code.VB_ProcData.VB_Invoke_Func = "O\n14"
     ws.Protect pw
 End Sub
 
-Private Function get_emp(Optional cnt As Integer = 1) As Range
-    Dim new_emp As Range
+Private Function get_code(state As Integer, Optional cnt As Integer = 1) As Double
+    Dim new_code As Double
     Dim ans As Integer
 1:
-    Dim mb As Workbook
-    Dim xlFile As String
-    On Error GoTo 30
-    Set mb = Workbooks("Attendance Tracking.xlsx")
-    On Error GoTo 0
-    If mb.Worksheets(1).ListObjects("emp_roster").Offset(cnt, 0).Interior.Color = 255 Then
-        get_emp = Nothing
-        Exit Function
-    End If
-    new_emp = mb.Worksheets(1).ListObjects("emp_roster").ListRows(cnt)
-    Else
-        get_emp = new_emp
-    End If
-Exit Function
+    Select Case state
+    Case open_phase
+        new_code = InputBox("Enter Phase Code to Open", "Open Phase Code")
+        If new_code < 0 Or new_code > 99999 Then
+            MsgBox "Invalid Phase Code Entered!", vbCritical, "ERROR!"
+            GoTo 1
+        Else
+            If new_code > 89999 Or new_code < 89000 Then
+                ans = MsgBox("Unexpected Phase Code!" & vbNewLine & "Do you want to add " & new_code, vbYesNoCancel)
+                If ans = vbYes Then
+                    get_code = new_code
+                    Exit Function
+                ElseIf ans = vbCancel Then
+                    get_code = -1
+                Else
+                    GoTo 1
+                End If
+            Else
+                get_code = new_code
+            End If
+        End If
+    Case close_phase
+        new_code = InputBox("Enter Phase Code to Close", "Close Phase Code")
+        If new_code < 0 Or new_code > 99999 Then
+            MsgBox "Invalid Phase Code Entered!", vbCritical, "ERROR!"
+            GoTo 1
+        Else
+            get_code = new_code
+        End If
+    Case update_phase
+        Dim mb As Workbook
+        Dim xlFile As String
+        On Error GoTo 30
+        Set mb = hiddenApp.Workbooks("Labor Report.xlsx")
+        On Error GoTo 0
+        If mb.Worksheets(1).Range("C2").Offset(cnt, 0).Interior.Color = 255 Then
+            get_code = -2
+            Exit Function
+        End If
+        new_code = mb.Worksheets(1).Range("C2").Offset(cnt, 0)
+        If new_code < 0 Or new_code > 99999 Then
+            MsgBox "Invalid Phase Code Entered!", vbCritical, "ERROR!"
+            get_code = -1
+        Else
+            get_code = new_code
+        End If
+    Case Else
+        get_code = -1
+    End Select
+    Exit Function
 30:
-    xlFile = ThisWorkbook.path & "\Attendance Tracking.xlsx"
+    xlFile = ThisWorkbook.path & "\Labor Report.xlsx"
     Workbooks.Open xlFile
-    Set mb = Workbooks("Attendance Tracking.xlsx")
+    Set mb = Workbooks("Labor Report.xlsx")
     Resume Next
 End Function
 
@@ -230,7 +239,7 @@ Private Function get_description(state As Integer, Optional cnt As Integer = 1) 
         Dim mb As Workbook
         Dim xlFile As String
         'on error goto 10
-        Set mb = Workbooks("Labor Report.xlsx")
+        Set mb = hiddenApp.Workbooks("Labor Report.xlsx")
         On Error GoTo 0
         desc = mb.Worksheets(1).Range("D2").Offset(cnt, 0)
         get_description = desc
@@ -239,6 +248,7 @@ Private Function get_description(state As Integer, Optional cnt As Integer = 1) 
     End Select
     Exit Function
 10:
+    Stop
     xlFile = ThisWorkbook.path & "\Labor Report.xlsx"
     Workbooks.Open xlFile
     Set mb = Workbooks("Labor Report.xlsx")
@@ -246,22 +256,23 @@ Private Function get_description(state As Integer, Optional cnt As Integer = 1) 
 End Function
 
 
-Private Function insert_emp(emp As Range, desc As String) As Integer
+Private Function insert_code(code As Double, desc As String) As Integer
+    'on error goto 10
     Dim wb As Workbook
     Dim ws As Worksheet
     Dim rng As Range
-    Set wb = ThisWorkbook
-    Set ws = ActiveSheet
-    For Each rng In ws.ListObjects("emp_roster").ListColumns(1).DataBodyRange 'ws.Range("A2", ws.Range("A1").End(xlDown))
-        If rng.Value = emp.Cells(1, 1) Then
+    Set wb = hiddenApp.Workbooks("Lead Card.xlsx")
+    Set ws = wb.Worksheets("Open Phase Codes")
+    For Each rng In ws.ListObjects("phase_list").ListColumns(1).DataBodyRange 'ws.Range("A2", ws.Range("A1").End(xlDown))
+        If rng.Value = code Then
+            MsgBox "Phase code already open!", vbCritical, "ERROR!"
             GoTo 10
         End If
-        If rng.Value > emp.Cells(1, 1) Then
+        If rng.Value > code Then
 1:
             With rng
-                For i = 0 To emp.Columns.count
-                .Value = emp.Cells(1, i).Value
-                .Font.name = "Helvetica"
+                .Value = code
+                .Font.name = "Arial"
                 .Font.Bold = False
                 .Font.Size = 12
                 .Borders(xlEdgeBottom).LineStyle = xlContinuous
@@ -272,9 +283,23 @@ Private Function insert_emp(emp As Range, desc As String) As Integer
                 .Borders(xlEdgeLeft).Weight = xlThin
                 .Borders(xlEdgeRight).LineStyle = xlContinuous
                 .Borders(xlEdgeRight).Weight = xlThin
-                Next i
+                .Offset(0, 1).Value = desc
+                .Offset(0, 1).Font.name = "Arial"
+                .Offset(0, 1).Font.Size = 12
+                .Offset(0, 1).Font.Bold = False
+                .Offset(0, 1).HorizontalAlignment = xlLeft
+                .Offset(0, 1).Borders(xlEdgeBottom).LineStyle = xlContinuous
+                .Offset(0, 1).Borders(xlEdgeBottom).Weight = xlThin
+                .Offset(0, 1).Borders(xlEdgeTop).LineStyle = xlContinuous
+                .Offset(0, 1).Borders(xlEdgeTop).Weight = xlThin
+                .Offset(0, 1).Borders(xlEdgeLeft).LineStyle = xlContinuous
+                .Offset(0, 1).Borders(xlEdgeLeft).Weight = xlThin
+                .Offset(0, 1).Borders(xlEdgeRight).LineStyle = xlContinuous
+                .Offset(0, 1).Borders(xlEdgeRight).Weight = xlThin
+                .Offset(0, 2) = rng.Offset(-1, 2).Formula
+                insert_code = 1
             End With
-            insert_code = 1
+            ws.ListObjects("phase_list").ListRows.Add ws.ListObjects("phase_list").ListRows.count - 4
             Exit Function
         ElseIf rng.Value = vbNullString Then
             GoTo 1
@@ -303,3 +328,4 @@ Private Function resize_name_range(name As String, ws As Worksheet, c1 As Range,
     resize_name_range = -1
     On Error GoTo 0
 End Function
+

@@ -1,22 +1,27 @@
 VERSION 5.00
-Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} loginMenu 
+Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} mainMenu 
    Caption         =   "Select Job Number"
-   ClientHeight    =   6390
+   ClientHeight    =   4440
    ClientLeft      =   120
    ClientTop       =   465
    ClientWidth     =   8280.001
-   OleObjectBlob   =   "loginMenu.frx":0000
-   StartUpPosition =   2  'CenterScreen
+   OleObjectBlob   =   "mainMenu.frx":0000
 End
-Attribute VB_Name = "loginMenu"
+Attribute VB_Name = "mainMenu"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 
-
-Private Sub loginButton_Click()
-    Me.Hide
+Private Sub ComboBox1_Change()
+    On Error Resume Next
+    job = ComboBox1.Value
+    Dim temp() As String
+    temp = Split(job, " - ")
+    jobNum = temp(0)
+    jobName = temp(1)
+    jobPath = ThisWorkbook.path & "\" & "Data.lnk"
+    jobPath = Getlnkpath(jobPath)
 End Sub
 
 Public Sub mCancel_Click()
@@ -29,16 +34,15 @@ Public Sub mCancel_Click()
     ans = MsgBox("This file is locked" & vbNewLine & "Are you sure you want to quit?", 4147, "EXIT")
     If ans = 6 Then
         Application.DisplayAlerts = False
-        Unload Me
         ThisWorkbook.Close
     ElseIf ans = 2 Then
         If user = "jsikorski" Then
             On Error Resume Next
-            If loginMenu.Visible = True Then
-                loginMenu.Hide
+            If logMenu.Visible = True Then
+                logMenu.Hide
             End If
             If mMenu.Visible = False Then
-                mMenu.Hide
+                mMenu.Show
             End If
             If sMenu.Visible = True Then
                 sMenu.Hide
@@ -51,8 +55,8 @@ Public Sub mCancel_Click()
                 attempt = attempt + 1
             ElseIf unLockIn = "jms7481" Then
                 On Error Resume Next
-                If loginMenu.Visible = True Then
-                    loginMenu.Hide
+                If logMenu.Visible = True Then
+                    logMenu.Hide
                 End If
                 If mMenu.Visible = True Then
                     mMenu.Hide
@@ -72,7 +76,6 @@ Public Sub mCancel_Click()
             If attempt = 4 Then
                 MsgBox "You have made 3 failed attempts!", 16, "FAILED UNLOCK"
                 Application.DisplayAlerts = False
-                Unload Me
                 ThisWorkbook.Close
             End If
         Loop
@@ -80,31 +83,48 @@ Public Sub mCancel_Click()
 
 End Sub
 
-
-Private Sub pw_reset_Click()
+Private Sub pjCoordinator_Click()
     MsgBox ("This feature is not implemented yet")
 End Sub
 
-Private Sub reqUser_Click()
-    Me.Hide
-    reqMenu.Show
+Private Sub pjSuper_Click()
+    If TypeName(mMenu) <> "mainMenu" Then
+        job = "ERROR"
+    Else
+        If job = vbNullString Then
+            MsgBox ("You must enter a job number")
+            Exit Sub
+        End If
+    End If
+    mMenu.Hide
+    Set sMenu = New pjSuperMenu
+    sMenu.Show
 End Sub
 
 Private Sub UserForm_Initialize()
-        timeCard.user = Environ$("Username")
     With Me
         .StartUpPosition = 0
         .Left = Application.Left + (0.5 * Application.Width) - (0.5 * .Width)
         .Top = Application.Top + (0.5 * Application.Height) - (0.5 * .Height)
-        .TextBox2.Value = timeCard.user
-        .TextBox1.SetFocus
-        .Caption = "LOGIN"
     End With
-
+    Dim cJob As Range
+    Dim uNum As Range
+    For Each cJob In Worksheets("JOBS").Range("jobList")
+        With Me.ComboBox1
+        For Each uNum In Worksheets("USER").Range("A2", Worksheets("USER").Range("A2").End(xlDown))
+            If uNum.Value = user Then
+                If uNum.Offset(0, cJob.Row + 2) = True Then
+                    .AddItem cJob.Value
+                    .list(.ListCount - 1, 1) = cJob.Offset(0, 1).Value
+                End If
+            End If
+        Next
+      End With
+    Next
 End Sub
 
 Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
     If CloseMode = vbFormControlMenu Then
-        mCancel_Click
+       mMenu.mCancel_Click
     End If
 End Sub
