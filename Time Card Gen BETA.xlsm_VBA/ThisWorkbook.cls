@@ -28,9 +28,11 @@ Private Sub Workbook_BeforeClose(Cancel As Boolean)
 End Sub
 
 Private Sub Workbook_BeforeSave(ByVal SaveAsUI As Boolean, Cancel As Boolean)
+    On Error Resume Next
     If Environ$("Username") = "jsikorski" Then
         Call ExportVBA
     End If
+    On Error GoTo 0
 End Sub
 
 Private Sub Workbook_Open()

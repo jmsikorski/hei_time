@@ -28,7 +28,7 @@ End Sub
 
 Public Sub mCancel_Click()
     Me.Hide
-    timeCard.main (True)
+    loginMenu.Show
 End Sub
 
 Private Sub pjCoordinator_Click()

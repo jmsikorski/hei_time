@@ -13,6 +13,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+
 Public Sub mCancel_Click()
     Unload Me
     lMenu.Show
@@ -25,11 +26,17 @@ Private Sub addLeadEnter_Click()
     Dim dm As ListObject
     For Each tEmp In ThisWorkbook.Worksheets("ROSTER").ListObjects("emp_roster").ListColumns("LEAD").DataBodyRange
         With Me.ComboBox1
+            Debug.Print .Value & " = " & tEmp.Offset(0, -3) & " " & tEmp.Offset(0, -4)
             If .Value = tEmp.Offset(0, -3) & " " & tEmp.Offset(0, -4) Then
-                tEmp = "YES"
+                ThisWorkbook.Worksheets("ROSTER").Unprotect xPass
+                tEmp.Value = "YES"
+                ThisWorkbook.Worksheets("ROSTER").Protect xPass
+                Exit For
             End If
         End With
     Next
+    Unload Me
+    Unload lMenu
     Set lMenu = New pjSuperPkt
     lMenu.Show
 

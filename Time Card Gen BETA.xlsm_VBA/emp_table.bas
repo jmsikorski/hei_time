@@ -24,7 +24,6 @@ Public Sub update_emp_table()
     On Error GoTo 0
     cnt = 1
     Set ws = ThisWorkbook.Worksheets("ROSTER")
-    ws.Unprotect pw
     ws.Range(ws.ListObjects("emp_roster").DataBodyRange(1, 1), ws.ListObjects("emp_roster").DataBodyRange(ws.ListObjects("emp_roster").ListRows.count - 1, 7)).Clear
     ws.Range(ws.ListObjects("emp_roster").DataBodyRange(1, 1), ws.ListObjects("emp_roster").DataBodyRange(1, 7)).Clear
 1:
@@ -62,7 +61,6 @@ update_done:
         .Protect
     End With
     Application.ScreenUpdating = True
-    ws.Protect pw
     hiddenApp.Quit
     Set hiddenApp = Nothing
     Exit Sub

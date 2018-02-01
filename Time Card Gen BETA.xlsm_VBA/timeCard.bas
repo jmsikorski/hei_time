@@ -59,6 +59,7 @@ Public Sub main(Optional logout As Boolean)
         Unload mMenu
         GoTo relogin
     End If
+    Stop
     Application.WindowState = xlMaximized
     xPass = encryptPassword("A~™þ»›Ûæ")
     ThisWorkbook.Unprotect xPass
@@ -100,13 +101,13 @@ auth_retry:
                 ThisWorkbook.Close False
             End If
         Else
-            ThisWorkbook.Close , False
+            ThisWorkbook.Close False
         End If
     ElseIf auth = -2 Then
         ThisWorkbook.Close
     ElseIf auth = -3 Then
         MsgBox "YOU ARE NOT AUTHORIZED TO VIEW THIS FILE!", vbCritical + vbOKOnly, "EXIT!"
-        ThisWorkbook.Close
+        ThisWorkbook.Close False
     End If
     
     If logout = False Then
@@ -441,6 +442,7 @@ Public Sub genLeadSheets()
     Dim ln As Integer
     ln = 0
     For Each ls In bks
+        ls.Worksheets("LEAD").Range("A1").Activate
         ls.Save
         ls.Close
         send_leadSheet ebks(ln, 0), ebks(ln, 1)
@@ -1144,7 +1146,7 @@ Public Sub updatePacket(Optional test As Boolean)
     Dim xlTCFile As String
     Dim wb As Workbook
     Dim tc_wb As Workbook
-    Dim tEmp As Employee
+    Dim tEmp As Variant
     If test Then
         jobNum = "461705"
         week = calcWeek(43127)
@@ -1207,14 +1209,19 @@ retry_emp:
     Dim trng As Range
     Dim moveShts() As String
     moveShts = Split("Labor Tracking & Goals,DAILY JOB REPORT,DAILY SIGN IN,TOOLBOX SIGN IN,LABOR RELEASE,EMPLOYEE EVALUATION", ",")
-    n = 0
     For xSht = 0 To UBound(moveShts)
         For l = 0 To UBound(wb_arr)
-            Set leadBook = hiddenApp.Workbooks(wb_arr(l))
+        n = 0
+        Do While Left(wb_arr(n), Len(wb_arr(n)) - 19) <> weekRoster(l, 0).getLName
+            n = n + 1
+        Loop
+            Set leadBook = hiddenApp.Workbooks(wb_arr(n))
             With leadBook.Worksheets(moveShts(xSht))
+                .Unprotect
                 .name = UCase(weekRoster(l, 0).getLName & " " & leadBook.Worksheets(moveShts(xSht)).name)
                 .UsedRange.Copy
                 .UsedRange.PasteSpecial xlPasteValues
+                .Protect
                 .Move after:=wb.Worksheets(wb.Sheets.count)
             End With
         Next l

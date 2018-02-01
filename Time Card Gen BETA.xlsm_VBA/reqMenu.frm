@@ -71,8 +71,8 @@ Private Sub reqSubmit_Click()
     user_form.export_user_sheet
     MsgBox "Thank you for your request." & vbNewLine & "You will recieve an email when your account is activated.", vbInformation + vbOKOnly, "SUBMITTED"
 reqSubmit_sub_end:
-    Me.Hide
-'    ThisWorkbook.Close False
+    Unload Me
+    ThisWorkbook.Close True
     Stop
 End Sub
 
@@ -100,8 +100,7 @@ End Sub
 
 Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
     If CloseMode = vbFormControlMenu Then
-        Unload Me
-        loginMenu.Show
+        loginMenu.mCancel_Click
     End If
 End Sub
 
