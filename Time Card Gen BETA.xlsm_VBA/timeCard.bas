@@ -620,10 +620,10 @@ Public Function file_auth() As Integer
     Dim pw As String
     Dim auth As Integer
     Dim datPath As String
-'    If user = "jsikorski" Then
-'        file_auth = 1
-'        Exit Function
-'    End If
+    If user = "jsikorski" Then
+        file_auth = 1
+        Exit Function
+    End If
     datPath = Getlnkpath(ThisWorkbook.path & "\Data.lnk")
     If DateDiff("s", ThisWorkbook.Worksheets("HOME").Range("file_updated"), FileDateTime(datPath & "\User.xlsx")) > 0 Then
         user_form.get_user_list

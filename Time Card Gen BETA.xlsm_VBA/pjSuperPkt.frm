@@ -6,7 +6,6 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} pjSuperPkt
    ClientTop       =   465
    ClientWidth     =   10365
    OleObjectBlob   =   "pjSuperPkt.frx":0000
-   ShowModal       =   0   'False
    StartUpPosition =   2  'CenterScreen
 End
 Attribute VB_Name = "pjSuperPkt"
@@ -14,6 +13,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+
 
 Private Sub spAdd_Click()
     Set aLead = New addlead
@@ -157,9 +157,9 @@ Private Sub UserForm_Initialize()
     ReDim leadRoster(numBox - 1, lBoxHt - 1)
     For i = 1 To numBox
         Dim eBox As Control
-        Set eBox = Me.Controls.Add("Forms.ListBox.1", "empList" & i)
+        Set eBox = EmpFrame.Controls.Add("Forms.ListBox.1", "empList" & i)
         eBox.Visible = True
-        eBox.Top = 84
+        eBox.Top = 6
         If lBoxHt < 12 Then
             eBox.Height = 198
         Else
@@ -200,7 +200,10 @@ Private Sub UserForm_Initialize()
             End If
             Set tBox = Me.Controls.Item("empList" & eBoxCol)
             tBox.AddItem name
+            On Error GoTo ubound_err
+            ttt = UBound(weekRoster)
             For tl = 0 To UBound(weekRoster)
+                On Error GoTo 0
                 Dim tempLead As Employee
                 Set tempLead = weekRoster(tl, 0)
                 If tempLead Is Nothing Then
@@ -214,9 +217,23 @@ Private Sub UserForm_Initialize()
         End If
     Next i
     wide = maxLen * 10
+    With EmpFrame
+        If (wide * numBox) + 72 > Application.Width * 0.95 Then
+            .Width = Application.Width * 0.95
+            .ScrollBars = fmScrollBarsHorizontal
+        Else
+            .Width = wide * numBox + 24
+        End If
+        If (.Controls("empList1").Height + 24 + Me.L1.Height + Me.Label2.Height + Me.spAdd.Height + 78) > Application.Height * 0.95 Then
+            .Height = Applicaiton.Height * 0.95
+            .ScrollBars = fmScrollBarsVertical
+        Else
+            .Height = .Controls("empList1").Height + 24
+        End If
+    End With
     With Me
-        .Height = .Controls("empList1").Height + .L1.Height + .Label2.Height + .spAdd.Height + 78
-        .Width = wide * numBox + 18
+        .Height = .Controls("EmpFrame").Height + .L1.Height + .Label2.Height + .spAdd.Height + 78
+        .Width = .Controls("EmpFrame").Width + 36
         .Label2.Caption = job & vbNewLine & "Week Ending: " & Format(week, "mm-dd-yy")
         .Label2.Left = 6
         .Label2.Width = wide * numBox
@@ -224,9 +241,9 @@ Private Sub UserForm_Initialize()
         .L1.Left = 6
         .L1.Width = wide * numBox
         .spAdd.Left = (.Width - 272) / 3
-        .spAdd.Top = Controls("empList1").Top + Controls("empList1").Height
+        .spAdd.Top = Controls("EmpFrame").Top + Controls("EmpFrame").Height + 12
         .spDone.Left = (.Width - 272) / 3 * 2 + 130
-        .spDone.Top = Controls("empList1").Top + Controls("empList1").Height
+        .spDone.Top = Controls("EmpFrame").Top + Controls("EmpFrame").Height + 12
         .StartUpPosition = 0
         .Left = Application.Left + (0.5 * Application.Width) - (0.5 * .Width)
         .Top = Application.Top + (0.5 * Application.Height) - (0.5 * .Height)
@@ -240,6 +257,9 @@ Private Sub UserForm_Initialize()
     Exit Sub
 10
     tEmp.emNum = -1
+    Resume Next
+ubound_err:
+    ReDim weekRoster(0, eCount)
     Resume Next
 End Sub
 Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)

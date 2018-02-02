@@ -13,6 +13,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+
 Private Sub nLead_Click()
     Dim thisMenu As String
     For i = 1 To UBound(menuList)
@@ -167,9 +168,9 @@ Public Sub setSheet(menuNum As Integer)
     ReDim empRoster(numBox - 1, lBoxHt - 1)
     For i = 1 To numBox
         Dim eBox As Control
-        Set eBox = Me.Controls.Add("Forms.ListBox.1", "empList" & i)
+        Set eBox = Me.Controls("EmpFrame").Controls.Add("Forms.ListBox.1", "empList" & i)
         eBox.Visible = True
-        eBox.Top = 84
+        eBox.Top = 6
         If lBoxHt < 12 Then
             eBox.Height = 198
         Else
@@ -243,10 +244,26 @@ Public Sub setSheet(menuNum As Integer)
     Dim buff As Integer
     Dim space As Double
     Dim bWide As Double
+    Dim bRows As Integer
     bWide = Me.spAdd.Width
+    With Me.Controls("EmpFrame")
+        If (wide * numBox) + 36 > Application.Width * 0.95 Then
+            .Width = Application.Width * 0.95
+            .ScrollBars = fmScrollBarsHorizontal
+        Else
+            .Width = wide * numBox + 24
+        End If
+        If (.Controls("empList1").Height + 24 + Me.E1.Height + Me.Label2.Height + Me.spAdd.Height + 78) > Application.Height * 0.95 Then
+            .Height = Application.Height * 0.95
+            .ScrollBars = fmScrollBarsVertical
+        Else
+            .Height = .Controls("empList1").Height + 12
+        End If
+    End With
     With Me
-        .Height = .Controls("empList1").Height + .E1.Height + .Label2.Height + .spAdd.Height + 78
-        .Width = wide * numBox + 18
+        bRows = .Controls("EmpFrame").Width / (bCnt * .spAdd.Width)
+        .Height = .Controls("EmpFrame").Height + .E1.Height + .Label2.Height + (bRows * .spAdd.Height) + 78
+        .Width = .Controls("EmpFrame").Width
         buff = ((Me.Width - ((bCnt - 1) * bWide)) / bCnt)
         space = (Me.Width - (buff / 2)) - (bCnt * bWide)
         space = (space / bCnt)
@@ -260,23 +277,19 @@ Public Sub setSheet(menuNum As Integer)
         .E1.Left = 6
         .E1.Top = lMenu.L1.Top
         .E1.Width = wide * numBox
-        .Show
-        If .Width > Application.Width Then
-            Stop
-        ElseIf .Width > .spAdd.Width * bCnt Then
-            For i = 0 To UBound(bNames)
-retry_wide:
-                .Controls(bNames(i)).Left = buff + i * (bWide + space)
-                .Controls(bNames(i)).Top = .Controls("empList1").Top + .Controls("empList1").Height
-            Next
-            .StartUpPosition = 0
-            .Left = Application.Left + (0.5 * Application.Width) - (0.5 * .Width)
-            .Top = Application.Top + (0.5 * Application.Height) - (0.5 * .Height)
-            lNum = lNum + 1
-        End If
+        For i = 0 To UBound(bNames)
+'            For i = 0 To UBound(bNames) - Int(UBound(bNames) / bRows)
+            .Controls(bNames(i)).Left = buff + i * (bWide + space)
+            .Controls(bNames(i)).Top = .Controls("EmpFrame").Top + .Controls("EmpFrame").Height + ((bRows - 1) * .spAdd.Height) + 6
+'            Next
+        Next
+        .StartUpPosition = 0
+        .Left = Application.Left + (0.5 * Application.Width) - (0.5 * .Width)
+        .Top = Application.Top + (0.5 * Application.Height) - (0.5 * .Height)
+        lNum = lNum + 1
     End With
     For i = 1 To numBox
-        With Me.Controls.Item("empList" & i)
+        With Me.Controls("EmpFrame").Controls.Item("empList" & i)
             .Left = 6 + (i - 1) * wide
             .Width = wide * (i + 1)
         End With
